@@ -1,8 +1,7 @@
-<<<<<<< HEAD
-/Users/rschlechter/Desktop/repo/schlechter_spatial_xxxxx_2023/.gitignore="1665B4D1"
-=======
 /Users/rschlechter/Desktop/repo/schlechter_spatial_xxxxx_2023/.Rprofile="DE5F130A"
+/Users/rschlechter/Desktop/repo/schlechter_spatial_xxxxx_2023/code/data_cfu.R="A7581FB0"
 /Users/rschlechter/Desktop/repo/schlechter_spatial_xxxxx_2023/code/libraries_syncom.R="E074DEEB"
 /Users/rschlechter/Desktop/repo/schlechter_spatial_xxxxx_2023/code/palette_syncom.R="38D15603"
-/Users/rschlechter/Desktop/repo/schlechter_spatial_xxxxx_2023/renv.lock="D3054659"
->>>>>>> 29a551769d3538d2be97d04029768d4b7da00591
+/Users/rschlechter/Desktop/repo/schlechter_spatial_xxxxx_2023/code/plot_cfu_per_syn.R="69D0E825"
+/Users/rschlechter/Desktop/repo/schlechter_spatial_xxxxx_2023/code/theme_rs_spatial.R="3B18757F"
+/Volumes/GoogleDrive/My Drive/_fuberlin/_data/spatial_comm/manuscript/scripts/cfu_data.R="0B16401A"
