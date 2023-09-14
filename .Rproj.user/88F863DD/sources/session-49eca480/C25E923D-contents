@@ -1,0 +1,151 @@
+
+##   DEPENDENCIES
+source("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/scripts/libraries_syncom.R")
+source("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/scripts/palette_syncom.R")
+source("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/scripts/cfu_analysis.R")
+
+####  Plots
+##    PLOTS TOTAL BACTERIAL DENSITY
+plot_popden = ggplot(cfu, aes(x = interaction(syn,dpi), y = log, fill = syn))+
+      geom_violin(trim = F, adjust = 1, scale = "width", alpha = 0.5, size = 0.25)+
+      geom_quasirandom(alpha = 0.2, size = 0.5, pch = 21)+
+      geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0, size = 0.25)+
+      geom_vline(aes(xintercept = 3.5), color = "grey")+
+      guides(fill = guide_legend(override.aes = list(size = 4, shape = 0, alpha = 1, width=0.25), byrow = TRUE))+
+      theme_rs()+
+      theme(aspect.ratio=1)+
+      scale_y_continuous(name = "Population density\n[log10 CFU g FW-1]", limits = c(2,11), expand=c(0,0), breaks=c(2,4,6,8,10))+
+      scale_x_discrete(name = "Days post-inoculation [dpi]", labels = c("", "7", "", "", "14", ""))+
+      scale_fill_manual(name = "Treatment", values = syn.pal, labels = syn.lab)+
+      geom_text(data = cld.popden, aes(label = cld, y = conf.high+2.5), position = position_dodge(width=0.90), size = 3)
+
+my_comparisons = list(c("syn1", "syn2"), c("syn2", "syn3"), c("syn1", "syn3"))
+
+plot_popden_syn = ggplot(cfu, aes(x = syn, y = log, fill = syn))+
+      geom_violin(trim = T, adjust = 1, scale = "width", alpha = 0.5, size = 0.25)+
+      geom_quasirandom(alpha = 0.2, size = 0.5)+
+      geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0, size = 0.25)+
+      guides(fill = "none")+
+      theme_rs()+
+      theme(aspect.ratio=2)+
+      scale_y_continuous(name = "Population density\n[log10 CFU g FW-1]", limits = c(3,12), expand=c(0,0), breaks=seq(4,12,2))+
+      scale_x_discrete(name = "Treatment", labels = syn.lab)+
+      scale_fill_manual(name = "Treatment", values = syn.pal, labels = syn.lab)+
+      stat_compare_means(method = "anova", label.y = 11.5, label.x = 2.5)+
+      stat_compare_means(aes(label = ..p.signif..), method = "t.test", comparisons = my_comparisons)
+
+plot_popden_dpi = ggplot(cfu, aes(x = as.factor(dpi), y = log, group=as.factor(dpi)))+
+      geom_violin(trim = T, adjust = 1, scale = "width", alpha = 0.5, size = 0.25, fill = "gray")+
+      geom_quasirandom(alpha = 0.2, size = 0.5)+
+      geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0, size = 0.25)+
+      theme_rs()+
+      theme(aspect.ratio=2)+
+      scale_y_continuous(name = "Population density\n[log10 CFU g FW-1]", limits = c(3,12), expand=c(0,0), breaks=seq(4,12,2))+
+      scale_x_discrete(name = "Days post-inoculation [dpi]")+
+      scale_fill_manual(name = "Treatment", values = syn.pal, labels = syn.lab)+
+      stat_compare_means(method = "t.test", label.y = 11.5, label.x = 1.5)+
+      stat_compare_means(aes(label = ..p.signif..), method = "t.test", label.y = 10, label.x = 1.5, comparison = list(c("7", "14")))
+
+##    PLOTS POPULATION DENSITY
+##  By Taxa
+taxa.plot = ggplot(cfu, aes(x = interaction(syn,dpi), y = log, fill=syn))+
+      facet_wrap(~taxa, ncol=2)+
+      geom_violin(trim = T, adjust = 1, scale = "width", alpha = 0.5, size = 0.25)+
+      geom_quasirandom(alpha = 0.2, size = 0.5, pch = 21)+
+      geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0, size = 0.25)+
+      geom_vline(aes(xintercept = 3.5), color = "grey")+
+      guides(fill = guide_legend(override.aes = list(size = 4, shape = 0, alpha = 1), byrow = TRUE))+
+      theme_rs()+
+      theme(aspect.ratio=1)+
+      scale_y_continuous(name = "Population density\n[log10 CFU g FW-1]", limits = c(3,12), expand=c(0,0), breaks=seq(4,12,2))+
+      scale_x_discrete(name = "Days post-inoculation [dpi]", labels = c("", "7", "", "", "14", ""))+
+      scale_fill_manual(name = "Treatment", values = syn.pal, labels = syn.lab)+
+      geom_text(data = cld.taxa, aes(label = cld, y = conf.high+3), position = position_dodge(width=0.90), size = 3)
+
+##    CV_abundance
+plot_cv_mean = ggplot(cfu_summary, aes(x=cv, y=mean, fill = syn))+
+      facet_wrap(~taxa, ncol=2)+
+      geom_point(pch=21, alpha = 0.75, size = 2)+
+      theme_rs()+
+      theme(aspect.ratio=2)+
+      scale_y_continuous(name = "Mean population density\n[log10 CFU g FW-1]", limits = c(4,9), expand=c(0,0), breaks=c(4,6,8))+
+      scale_x_continuous(name = "Coefficient of Variation [%]", limits = c(0,30), expand=c(0,0), breaks=seq(0,25,5))+
+      scale_fill_manual(name = "Treatment", values = syn.pal, labels = syn.lab)+
+      guides(fill = 'none')
+
+##  By Strain
+strain.plot = ggplot(cfu, aes(x = interaction(syn,dpi), y = log, fill=syn))+
+      facet_wrap(~strain, ncol = 5)+
+      geom_violin(trim = F, adjust = 1, scale = "width", alpha = 0.75, size = 0.25)+
+      geom_quasirandom(alpha = 0.2, size = 0.75)+
+      geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0, size = 0.25)+
+      geom_vline(aes(xintercept = 3.5), color = "grey")+
+      guides(fill = guide_legend(override.aes = list(size = 4, shape = 0), byrow = TRUE))+
+      theme_rs()+
+      theme(aspect.ratio = 1)+
+      scale_y_continuous(name = "Population density\n[log10 CFU g FW-1]", limits=c(2.5,11), expand=c(0,0), breaks=c(4,6,8,10))+
+      scale_x_discrete(name = "Days post-inoculation [dpi]", labels = c("", "7", "", "", "14", ""))+
+      scale_fill_manual(name = "Treatment", values = syn.pal, labels = syn.lab)+
+      geom_text(data = cld.strain, aes(label = cld, y = conf.high+2.5), position = position_dodge(width=0.90), size = 3)
+
+##  By Community
+com.plot = ggplot(cfu, aes(x=interaction(comm,syn), y=log, fill = syn))+
+      facet_grid(dpi~strain, scales = "free_x")+
+      geom_violin(trim = T, adjust = 1, scale = "width", alpha = 0.75, size = 0.25)+
+      geom_quasirandom(alpha = 0.2, size = 0.75)+
+      geom_boxplot(fill = "white", width = 0.1, outlier.alpha = 0, size = 0.25)+
+      guides(fill = guide_legend(override.aes = list(size = 0, shape = 0, alpha = 1, height=1), byrow = TRUE))+
+      theme_rs()+
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+      scale_y_continuous(name = "Population density\n[log10 CFU g FW-1]", limits=c(2.5,10), expand=c(0,0), breaks=c(4,6,8,10))+
+      scale_fill_manual(name = "Treatment", values = syn.pal, labels = syn.lab)+
+      geom_text(data = cld.comm, aes(label = cld, y = mean+sd+1))+
+      guides(fill="none")
+
+##  SUM vs TOTAL (only for M3)
+plot.sum.total1 = ggplot(cfu.long, aes(x = count, y = log.total, fill = count))+
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), trim = F, adjust = 1.5, scale = "width", alpha = 0.75, size = 0.25)+
+  geom_point(alpha = 0.2)+
+  geom_point(data=mean.cfu.long, aes(y=mean), shape = 23, fill = 'red', size = 4, position = position_dodge(width=0.90))+
+  theme_rs()+
+  guides(fill = 'none')+
+  theme(text = element_text(size = 20))+
+  scale_y_continuous(name = "Bacterial density (log10 CFU g FW)", limits = c(4,9), breaks = seq(5,9,2))+
+  scale_x_discrete(name = "", labels = c("Sum CFU", "Total CFU"))+
+  scale_fill_manual(name = "Measurement", labels = c("Sum CFU", "Total CFU"), values = c('grey90', 'grey60'))+
+  annotate('text', x = 2.5, y = 9, label = paste('p = ', signif(t$p.value,2)), hjust="right")+
+  annotate('text', x = 2.5, y = 8.8, label = paste('d = ', signif(d,2)), hjust ="right")
+
+plot.sum.total2 = ggplot(cfu.long, aes(x = comm, y = log.total))+
+  geom_violin(aes(fill = count), draw_quantiles = c(0.25, 0.5, 0.75), trim = F, adjust = 1.5, scale = "width", alpha = 0.75, size = 0.25)+
+  geom_point(aes(group = count), alpha = 0.25, position = position_dodge(width=0.90))+
+  geom_point(data=cfu_sum, aes(y=m, group = count), shape = 18, size =4, position = position_dodge(width=0.90))+
+  theme_rs()+
+  theme(text = element_text(size = 20))+
+  guides(fill = guide_legend(override.aes = list(size = 4), byrow = TRUE))+
+  scale_y_continuous(name = "Bacterial density (log10 CFU g FW)", limits = c(4,9), breaks = seq(5,9,2))+
+  scale_fill_manual(name = "Measurement", labels = c("Sum CFU", "Total CFU"), values = c('grey90', 'grey60'))+
+  geom_text(data=cont.cfusum, aes(label = paste0('p = ', signif(p.value,2)), y = 8.9, x=comm))
+
+
+
+###   SAVING PLOTS
+
+#     Figure 3
+pdf("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/figures/fig3.pdf", height = 5, width = 18, useDingbats = F)
+plot_popden + taxa.plot + plot_cv_mean + plot_annotation(tag_levels = 'A') + plot_layout(guides = "collect", widths = c(1,2,2))
+dev.off()
+
+pdf("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/figures/fig3.pdf", height = 5, width = 18, useDingbats = F)
+plot_popden_syn + plot_popden_dpi + taxa.plot + plot_cv_mean + plot_annotation(tag_levels = 'A') + plot_layout(guides = "collect", widths = c(0.5,0.5,2,1))
+dev.off()
+
+#     Each community plot
+pdf("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/figures/figS1.pdf", height = 12, width = 12, useDingbats = F)
+strain.plot/com.plot + plot_annotation(tag_levels = 'A') + plot_layout(guides = "collect")
+dev.off()
+
+#     M3: Sum vs Total CFU
+pdf("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/figures/cfu_sum_total.pdf", height = 6, width = 12, useDingbats = F)
+plot.sum.total1 + plot.sum.total2 + plot_annotation(tag_levels = 'A') + plot_layout(guides = "collect", widths = c(1, 3)) & theme(legend.position='bottom')
+dev.off()
