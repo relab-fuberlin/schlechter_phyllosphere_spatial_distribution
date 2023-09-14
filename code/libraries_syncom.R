@@ -1,10 +1,11 @@
-##  LIBRARIES USED FOR SPATIAL DISTRIBUTION PAPER
+#!/usr/bin/env Rscript
 
-# dependencies
-source("./code/theme_rs_spatial.R")
+
+##  LIBRARIES USED FOR SPATIAL DISTRIBUTION PAPER
 
 # library
 # tidy data
+library(here)
 library(tidyverse)
 library(reshape2)
 library(broom)
@@ -18,6 +19,8 @@ library(ggh4x)
 library(ggpubr)
 library(ggtern)
 library(ggbeeswarm)
+library(wesanderson)
+library(ggdist)
 
 # stats
 library(car)
@@ -28,3 +31,6 @@ library(spatstat)
 library(MESS)
 library(MASS)
 library(betareg)
+
+# dependencies
+source("code/theme_rs_spatial.R")

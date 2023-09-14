@@ -4,13 +4,13 @@ source("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/scripts/
 
 ##    labels
 sp.lab = c("MeL85", "MeL92", "Mr0-1", "SmFR1", "SpFA2")
-names(sp.lab) <- c("meth85", "meth92", "mr01", "smfr1", "spfa2")
+names(sp.lab) <- c("meL85", "meL92", "mr01", "smfr1", "spfa2")
 
-taxa.lab = c("Methylobacteria", "Sphingomonas")
-names(taxa.lab) <- c("methylo", "sphingo")
+taxa.lab = c("Methylobacterium", "Sphingomonas")
+names(taxa.lab) <- c("Methylobacterium", "Sphingomonas")
 
 syn.lab = c("C", "S2", "S3")
-names(syn.lab) <- c("syn1", "syn2", "syn3")
+names(syn.lab) <- c("C", "S2", "S3")
 
 dpi.lab = c("7 dpi", "14 dpi")
 names(dpi.lab) <- c("07dpi", "14dpi")
@@ -27,6 +27,7 @@ names(pair.lab) = c('meth85_meth92', 'meth85_mr01', 'meth92_mr01','smfr1_spfa2',
 sp.pal = brewer.pal(5, "RdYlBu")
 taxa.pal = brewer.pal(11, "RdYlBu")[c(1,11)]
 syn.pal = brewer.pal(5, "YlGnBu")[c(1,2,4)]
+syn.pal = wes_palette("Cavalcanti1",3)
 pattern.pal = brewer.pal(3, "PRGn")
 
 ##    DATA FRAME
