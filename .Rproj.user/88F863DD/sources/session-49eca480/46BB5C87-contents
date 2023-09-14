@@ -1,0 +1,165 @@
+
+##   DEPENDENCIES
+source("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/scripts/libraries_syncom.R")
+source("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/scripts/palette_syncom.R")
+
+##   LOAD DATA
+cfu = readRDS("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/data/cfu.rds")
+total_cfu = readRDS("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/data/total_cfu.rds")
+cfu_summary = readRDS("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/data/cfu_summary.rds")
+cfu.long = readRDS("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/data/total_sum_cfu.rds")
+cfu_sum = readRDS("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/data/total_sum_cfu_summary.rds")
+
+##  Total bacterial density
+hist(total_cfu$log.total)
+qqnorm(total_cfu$log.total)
+
+anova.total = aov(log.total ~ syn + dpi, data = total_cfu)
+summary(anova.total)
+etaSquared(anova.total)
+
+em.total = emmeans(anova.total, specs = ~ syn + dpi, data = total_cfu, adjust = "bonferroni")
+#em.total = emmeans(anova.total, specs = ~  dpi, data = total_cfu, adjust = "bonferroni")
+contrast(em.total, "pairwise", adjust = "bonferroni") %>% tidy()
+
+cld.total = multcomp::cld(em.total) %>% 
+  tidy() %>% 
+  data.frame() %>% 
+  mutate_if(is.character, str_trim) %>% 
+  mutate(cld = case_when(.group == '1' ~ 'c',
+                         .group == '2' ~ 'e',
+                         .group == '3' ~ 'a',
+                         .group == '34' ~ 'ab',
+                         .group == '45' ~ 'bd',
+                         .group == '5' ~ 'd'))
+
+##  Population density
+hist(cfu$log)
+qqnorm(cfu$log)
+
+cfu %>% 
+      group_by(syn, dpi) %>% 
+      summarise(m = mean(log),
+                sd = sd(log))
+
+anova.popden = aov(log ~ syn + as.factor(dpi), data = cfu)
+summary(anova.popden)
+etaSquared(anova.popden)
+
+em.popden = emmeans(anova.popden, specs = ~ syn + dpi, data = cfu, adjust = "bonferroni")
+contrast(em.popden, "pairwise", adjust = "bonferroni")
+pairs(em.popden)
+
+cld.popden = multcomp::cld(em.popden) %>% 
+  tidy() %>% 
+  data.frame() %>% 
+  mutate_if(is.character, str_trim) %>% 
+  mutate(cld = case_when(.group == '1' ~ 'c',
+                         .group == '2' ~ 'e',
+                         .group == '3' ~ 'a',
+                         .group == '4' ~ 'b',
+                         .group == '5' ~ 'd'))
+
+##  Population density: BY TAXA
+anova.taxa = aov(log ~ taxa + syn + dpi + taxa:syn, data = cfu)
+summary(anova.taxa)
+etaSquared(anova.taxa)
+
+em.taxa = emmeans(anova.taxa, specs = pairwise ~  syn | taxa | dpi, data = cfu, adjust = "bonferroni")
+contrast(em.taxa, "pairwise") %>% tidy() %>% data.frame() %>% write_csv(., "~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/data/cfu-taxa-contr.csv")
+
+cld.taxa = multcomp::cld(em.taxa) %>% 
+  tidy() %>% 
+  data.frame() %>% 
+  mutate_if(is.character, str_trim) %>% 
+  arrange(taxa, dpi, syn) %>% 
+  mutate(cld = case_when(.group == '1' ~ 'b',
+                         .group == '2' ~ 'a',
+                         .group == '3' ~ 'c'))
+
+##  Population density: BY STRAIN
+anova.strain = aov(log ~ strain * syn * dpi, data = cfu)
+summary(anova.strain)
+etaSquared(anova.strain)
+
+em.strain = emmeans(anova.strain, specs = pairwise ~  syn | strain | dpi, data = cfu, adjust = "bonferroni")
+contrast(em.strain, "pairwise")
+
+cld.strain = multcomp::cld(em.strain) %>% 
+  tidy() %>% 
+  data.frame() %>% 
+  mutate_if(is.character, str_trim) %>% 
+  arrange(strain, dpi, syn) %>% 
+  mutate(cld = case_when(.group == '1' ~ 'b',
+                         .group == '2' ~ 'a',
+                         .group == '3' ~ 'c'))
+
+##  Population density: BY COMMUNITY
+anova.mel85 = aov(log ~ comm * dpi, data = cfu[cfu$strain=="MeL85",])
+anova.mel92 = aov(log ~ comm * dpi, data = cfu[cfu$strain=="MeL92",])
+anova.mr01 = aov(log ~ comm * dpi, data = cfu[cfu$strain=="Mr0-1",])
+anova.smfr1 = aov(log ~ comm * dpi, data = cfu[cfu$strain=="SmFR1",])
+anova.spfa2 = aov(log ~ comm * dpi, data = cfu[cfu$strain=="SpFA2",])
+
+summary(anova.mel85)
+summary(anova.mel92)
+summary(anova.mr01)
+summary(anova.smfr1)
+summary(anova.spfa2)
+
+etaSquared(anova.mel85)
+etaSquared(anova.mel92)
+etaSquared(anova.mr01)
+etaSquared(anova.smfr1)
+etaSquared(anova.spfa2)
+
+em.mel85 = emmeans(anova.mel85, specs = pairwise ~  comm | dpi, data = cfu[cfu$strain=="MeL85",], adjust = "bonferroni")
+em.mel92 = emmeans(anova.mel92, specs = pairwise ~  comm | dpi, data = cfu[cfu$strain=="MeL92",], adjust = "bonferroni")
+em.mr01 = emmeans(anova.mr01, specs = pairwise ~  comm | dpi, data = cfu[cfu$strain=="Mr0-1",], adjust = "bonferroni")
+em.smfr1 = emmeans(anova.smfr1, specs = pairwise ~  comm | dpi, data = cfu[cfu$strain=="SmFR1",], adjust = "bonferroni")
+em.spfa2 = emmeans(anova.spfa2, specs = pairwise ~  comm | dpi, data = cfu[cfu$strain=="SpFA2",], adjust = "bonferroni")
+
+cld.mel85 = contrast(em.mel85, "trt.vs.ctrl", ref = 1) %>% tidy %>% na.omit %>% mutate(strain = "MeL85")
+cld.mel92 = contrast(em.mel92, "trt.vs.ctrl", ref = 2) %>% tidy %>% na.omit %>% mutate(strain = "MeL92")
+cld.mr01 = contrast(em.mr01, "trt.vs.ctrl", ref = 3) %>% tidy %>% na.omit %>% mutate(strain = "Mr0-1")
+cld.smfr1 = contrast(em.smfr1, "trt.vs.ctrl", ref = 4) %>% tidy %>% na.omit %>% mutate(strain = "SmFR1")
+cld.spfa2 = contrast(em.spfa2, "trt.vs.ctrl", ref = 3) %>% tidy %>% na.omit %>% mutate(strain = "SpFA2")
+
+cld.comm = rbind(cld.mel85, cld.mel92, cld.mr01, cld.smfr1, cld.spfa2) %>% 
+      separate(contrast, into = c("comm","ctrl"), sep = " - ") %>% 
+      mutate(cld = case_when(adj.p.value < 0.05 ~ '*', TRUE ~ ''), difference = 10^abs(estimate)) %>% 
+      dplyr::select(-null.value, -std.error, -df)
+cld.comm = left_join(cld.comm, cfu_summary, by = c("dpi", "comm", "strain"))
+
+
+##  Comparison between Sum CFU (MM) and Total CFU (R2A)
+hist(cfu.long$log.total)
+
+glm.cfusum = glm(log.total ~ count * comm, data = cfu.long, family=Gamma(link='log'))
+glm.cfusum %>% summary
+resid(glm.cfusum) %>% qqnorm
+Anova(glm.cfusum, type = 'III')
+
+em.cfusum = emmeans(glm.cfusum, ~count | comm, data = cfu.long, adjust='bonferroni')
+cont.cfusum = contrast(em.cfusum, 'pairwise') %>% tidy
+
+aov.cfusum = aov(log.total ~ count * dpi * comm, data = cfu.long)
+aov.cfusum %>% summary
+resid(aov.cfusum) %>% qqnorm
+etaSquared(aov.cfusum)
+
+mean.cfu.long = cfu.long %>% 
+  group_by(count) %>% 
+  summarise(mean = mean(log.total),
+            sd = sd(log.total))
+
+t = t.test(cfu.long$log.total[cfu.long$count=="sum_cfu"], cfu.long$log.total[cfu.long$count=="total_cfu"])
+d = (mean.cfu.long$mean[1]-mean.cfu.long$mean[2])/sqrt((mean.cfu.long$sd[1]^2+mean.cfu.long$sd[2]^2)/2)
+
+
+
+anova.strain.alone = aov(log ~ strain*syn, data = cfu)
+summary(anova.strain.alone)
+
+em.strain = emmeans(anova.strain.alone, specs = pairwise ~  strain|syn, data = cfu, adjust = "bonferroni")
+contrast(em.strain, "pairwise", adjust = "bonferroni")
