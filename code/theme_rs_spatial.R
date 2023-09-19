@@ -2,7 +2,9 @@
 theme_rs <- function() {
   theme_bw() %+replace%
     theme(
-      strip.background = element_rect(fill = NA, color = "gray", size = 0.5),
+      strip.background = element_blank(),
+      strip.placement = "outside",
+      strip.text = element_text(size=12, vjust = 1, face="italic"),
       legend.box.spacing = unit(0.1, "line"),
       legend.key.size = unit(0.1, "cm"),
       panel.background = element_blank(),

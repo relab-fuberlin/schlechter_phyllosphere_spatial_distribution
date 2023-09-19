@@ -16,7 +16,7 @@ read.csv("results/cfu_data_processed.csv") %>%
     
     geom_boxplot(
         fill="white",
-        width=0.08,
+        width=0.2,
         outlier.alpha = 0
     )+
     
@@ -30,7 +30,7 @@ read.csv("results/cfu_data_processed.csv") %>%
         parse = TRUE,
         method = "anova", 
         label.y = 11.8, 
-        label.x = 2.9,
+        label.x = 2.3,
         size = 5)+
     
     stat_compare_means(
@@ -43,7 +43,7 @@ read.csv("results/cfu_data_processed.csv") %>%
     
     scale_y_continuous(limits = c(2,12), breaks=c(2,4,6,8,10))+
     scale_fill_manual(name = "SynCom", values = syn.pal, labels = syn.lab, guide="none")+
-    labs(y = "Population density\n[log[10] CFU g FW^-1]",
+    labs(y = bquote('Population density ['*log[10]~ "CFU g" ~ FW^-1 *"]"),
          x = "SynCom")+
     theme_rs()
 
@@ -51,30 +51,33 @@ read.csv("results/cfu_data_processed.csv") %>%
 read.csv("results/cfu_data_processed.csv") %>% 
     na.omit %>% 
     ggplot(aes(dpi, cfu_log, fill=synID))+
+    facet_wrap(~taxa, ncol=2)+
     
     stat_halfeye(
         adjust = 1,
         justification = -0.3,
         .width = 0,
-        scale = 0.4,
+        scale = 0.6,
         point_colour = NA,
         position = position_dodge(0.9)
     )+
 
     geom_point(shape=21, 
-        position=position_jitterdodge(dodge.width = 0.9, jitter.width = 0.05),
-        alpha = 0.5,
+        position=position_jitterdodge(dodge.width = 0.9, jitter.width = 0.1),
+        alpha = 0.1,
         size = 1)+
     
     geom_boxplot(
         aes(group=interaction(dpi,synID)),
         fill="white",
-        width=0.08,
+        width=0.2,
         position=position_dodge(0.9),
         outlier.alpha = 0
     )+
     scale_y_continuous(name = "Population density\n[log10 CFU g FW-1]", limits = c(2,11), expand=c(0,0), breaks=c(2,4,6,8,10))+
-    theme_rs()
+    scale_x_discrete(name = "Days post-inoculation [dpi]", labels = dpi.lab)+
+    theme_rs()+
+    scale_fill_manual(name = "SynCom", values = syn.pal, labels = syn.lab, guide="none")
 
 
 read.csv("results/cfu_data_processed.csv") %>% 
@@ -111,3 +114,5 @@ read.csv("results/cfu_data_processed.csv") %>%
     scale_y_continuous(name = "Population density\n[log10 CFU g FW-1]", limits = c(2,11), breaks=c(2,4,6,8,10))+
     
     theme_rs()
+
+

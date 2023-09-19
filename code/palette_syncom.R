@@ -6,13 +6,13 @@ source("~/Google Drive/My Drive/_fuberlin/_data/spatial_comm/manuscript/scripts/
 sp.lab = c("MeL85", "MeL92", "Mr0-1", "SmFR1", "SpFA2")
 names(sp.lab) <- c("meL85", "meL92", "mr01", "smfr1", "spfa2")
 
-taxa.lab = c("Methylobacterium", "Sphingomonas")
+taxa.lab = c(expression(italic(Methylobacterium)), "Sphinasdasdgomonas")
 names(taxa.lab) <- c("Methylobacterium", "Sphingomonas")
 
 syn.lab = c("C", "S2", "S3")
 names(syn.lab) <- c("C", "S2", "S3")
 
-dpi.lab = c("7 dpi", "14 dpi")
+dpi.lab = c("7", "14")
 names(dpi.lab) <- c("07dpi", "14dpi")
 
 pattern.lab = c("Aggregated", "CSR", "Regular")
