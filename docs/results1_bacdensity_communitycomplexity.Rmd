@@ -1,0 +1,91 @@
+---
+title: "Spatial distribution paper - Section 1"
+author: "Rudolf Schlechter"
+date: "2023-09-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 2, scipen = 1)
+
+library(here)
+#library(kableExtra)
+
+source(here('code', 'libraries_syncom.R'))
+source(here('code', 'palette_syncom.R'))
+source(here('code', 'theme_rs_spatial.R'))
+
+```
+
+## Taxon-specific population density changes correlate with community complexity
+
+```{r import_data, include=FALSE}
+data_cfu <- read.csv(here("results/cfu_data_processed.csv")) %>% 
+    na.omit %>% 
+    mutate(dpi = factor(dpi),
+           synID = factor(synID),
+           taxa = factor(taxa))
+```
+
+```{r cfu_str}
+data_cfu %>% head
+```
+
+```{r}
+linear_cfu = lm(cfu_log ~ synID + dpi + taxa, data_cfu)
+
+# Shapiro-Wilk test for normality
+cfu_normality = shapiro.test(rstandard(linear_cfu))
+
+# Breusch-Pagan test for homogeneity of variances
+cfu_homoskedasticity = ncvTest(linear_cfu)
+```
+
+
+We first investigated the effect of community complexity on bacterial population densities in planta using a full factorial design (Fig. 1). Bacterial densities were determined for each strain at different community complexities (C = near isogenic control; S2 = two-species SynCom; S3 = three-species SynCom) after 7 and 14 dpi.
+
+We used non-parametric methods to analyse the CFU data, considering violation of normality (Shapiro-Wilk test, *W* = `r cfu_normality$statistic`, *p* = `r cfu_normality$p.value`) and homogeneity of variance (Breusch-Pagan test, $\ X^{2}$ = `r cfu_homoskedasticity$ChiSquare`, *p* = `r cfu_homoskedasticity$p`)
+
+```{r cfu_analysis_1}
+# Kruskal-Wallis test and effect size for community complexity (synID)
+kw_synID = kruskal.test(cfu_log ~ synID, data_cfu)
+keff_synID = kruskal_effsize(formula = cfu_log ~ synID, data = data_cfu, ci=TRUE, nboot=100)
+
+# Kruskal-Wallis test and effect size for bacterial group (taxa)
+kw_taxa = kruskal.test(cfu_log ~ taxa, data_cfu)
+keff_taxa = kruskal_effsize(formula = cfu_log ~ taxa, data = data_cfu, ci=TRUE, nboot=100)
+
+# Kruskal-Wallis test and effect size for sampling time (dpi)
+kw_dpi = kruskal.test(cfu_log ~ dpi, data_cfu)
+keff_dpi = kruskal_effsize(formula = cfu_log ~ dpi, data = data_cfu, ci=TRUE, nboot=100)
+
+```
+
+We first tested the effect of three main factors that influenced changes in bacterial populations, namely the community complexity a population was in, the bacterial taxa that the population belonged to, and the time of sampling (7 or 14 days post inoculation). First, community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(`r kw_synID$parameter`) = `r kw_synID$statistic`, *p* = `r kw_synID$p.value`, $\eta^{2}$(`r kw_synID$parameter`) = `r keff_synID$effsize` [`r keff_synID$conf.low`-`r keff_synID$conf.high`]). Second, we observed a difference between populations that belonged to *Methylobacterium* and *Sphingomonas* (Kruskal-Wallis, *H*(`r kw_taxa$parameter`) = `r kw_taxa$statistic`, *p* = `r kw_taxa$p.value`, $\eta^{2}$(`r kw_taxa$parameter`) = `r keff_taxa$effsize` [`r keff_taxa$conf.low`-`r keff_taxa$conf.high`]). Lastly, the time of sampling showed a small yet significant effect on bacterial populations (Kruskal-Wallis, *H*(`r kw_dpi$parameter`) = `r kw_dpi$statistic`, *p* = `r kw_dpi$p.value`, $\eta^{2}$(`r kw_dpi$parameter`) = `r keff_dpi$effsize` [`r keff_dpi$conf.low`-`r keff_dpi$conf.high`]).
+
+```{r descriptive_statistics}
+change_cfu_synID = data_cfu %>% 
+    group_by(synID) %>% 
+    summarise(mean_cfu = mean(cfu)) %>% 
+    mutate(fractional_change = 100*(mean_cfu - mean_cfu[1])/mean_cfu[1])
+
+change_cfu_taxa = data_cfu %>% 
+    group_by(taxa) %>% 
+    summarise(mean_cfu = mean(cfu)) %>% 
+    mutate(fractional_change = 100*(mean_cfu - mean_cfu[1])/mean_cfu[1])
+
+change_cfu_dpi = data_cfu %>% 
+    group_by(dpi) %>% 
+    summarise(mean_cfu = mean(cfu)) %>% 
+    mutate(fold_change = mean_cfu/mean_cfu[1])
+```
+
+
+On average, bacterial population densities in S2 increased in `r change_cfu_synID %>% filter(synID=="S2") %>% pull()`% compared to C. By contrast, population densities experienced a `r change_cfu_synID %>% filter(synID=="S3") %>% pull()*-1`% decrease in S3 (Fig. 3a). 
+The population densities of *Sphingomonas* were `r change_cfu_taxa %>% filter(taxa=="Sphingomonas") %>% pull()`% larger than that of *Methylobacterium*,
+
+Over time, the average CFU gFW^-1^ increased only `r change_cfu_dpi %>% filter(dpi=="14dpi") %>% pull(fold_change)`-fold, from `r change_cfu_dpi %>% filter(dpi=="07dpi") %>% pull(mean_cfu)`  CFU gFW^-1^ to `r change_cfu_dpi %>% filter(dpi=="14dpi") %>% pull(mean_cfu)` CFU gFW^-1^ (Fig. 3b).
+
+
+
