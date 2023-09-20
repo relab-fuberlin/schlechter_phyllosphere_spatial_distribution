@@ -27,4 +27,4 @@ data.all %>%
     rename(channel = ch) %>% 
     left_join(., metadata, by = c("exp", "dpi", "synID", "comID", "syncom", "channel")) %>% 
     select(exp, dpi, synID, comID, syncom, strain, channel, img, obj_n, area, x, y) %>% 
-    saveRDS(file = here('results', 'coordenates.rds'))
+    saveRDS(file = here('results', 'coordinates.rds'))
