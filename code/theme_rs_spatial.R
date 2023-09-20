@@ -9,7 +9,7 @@ theme_rs <- function() {
       legend.key.size = unit(0.1, "cm"),
       panel.background = element_blank(),
       panel.border = element_rect(size = 1, fill = NA, color = "black"),
-      panel.spacing = grid::unit(0.5, "line"),
+      panel.spacing = grid::unit(1.5, "line"),
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       text = element_text(color = "black"),
