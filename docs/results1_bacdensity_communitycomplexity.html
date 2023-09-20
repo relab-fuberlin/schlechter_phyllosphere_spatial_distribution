@@ -395,26 +395,25 @@ violation of normality (Shapiro-Wilk test, <em>W</em> = 0.94, <em>p</em>
 kw_synID = kruskal.test(cfu_log ~ synID, data_cfu)
 keff_synID = kruskal_effsize(formula = cfu_log ~ synID, data = data_cfu, ci=TRUE, nboot=100)
 
-# Kruskal-Wallis test and effect size for bacterial group (taxa)
-kw_taxa = kruskal.test(cfu_log ~ taxa, data_cfu)
-keff_taxa = kruskal_effsize(formula = cfu_log ~ taxa, data = data_cfu, ci=TRUE, nboot=100)
+# Wilcoxon test and effect size for bacterial group (taxa)
+w_taxa = wilcox.test(formula = cfu_log ~ taxa, data = data_cfu)
+weff_taxa = wilcox_effsize(formula = cfu_log ~ taxa, data = data_cfu, ci=TRUE, nboot=100)
 
-# Kruskal-Wallis test and effect size for sampling time (dpi)
-kw_dpi = kruskal.test(cfu_log ~ dpi, data_cfu)
-keff_dpi = kruskal_effsize(formula = cfu_log ~ dpi, data = data_cfu, ci=TRUE, nboot=100)</code></pre>
+# Wilcoxon test and effect size for sampling time (dpi)
+w_dpi = wilcox.test(formula = cfu_log ~ dpi, data = data_cfu)
+weff_dpi = wilcox_effsize(formula = cfu_log ~ dpi, data = data_cfu, ci=TRUE, nboot=100)</code></pre>
 <p>We first tested the effect of three main factors that influenced
 changes in bacterial populations, namely the community complexity a
 population was in, the bacterial taxa that the population belonged to,
 and the time of sampling (7 or 14 days post inoculation). First,
 community complexity had a large effect on bacterial populations
-(Kruskal-Wallis, <em>H</em>(2) = 307.02, <em>p</em> = 2.15^{-67}, <span class="math inline">\(\eta^{2}\)</span>(2) = 0.34 [0.29-0.39]). Second,
+(Kruskal-Wallis, <em>H</em>(2) = 307.02, <em>p</em> = 2.15^{-67}, <span class="math inline">\(\eta^{2}\)</span>(2) = 0.34 [0.27-0.38]). Second,
 we observed a difference between populations that belonged to
-<em>Methylobacterium</em> and <em>Sphingomonas</em> (Kruskal-Wallis,
-<em>H</em>(1) = 159.66, <em>p</em> = 1.34^{-36}, <span class="math inline">\(\eta^{2}\)</span>(1) = 0.17 [0.13-0.21]). Lastly,
-the time of sampling showed a small yet significant effect on bacterial
-populations (Kruskal-Wallis, <em>H</em>(1) = 21.69, <em>p</em> =
-3.2^{-6}, <span class="math inline">\(\eta^{2}\)</span>(1) = 0.02
-[0.01-0.05]).</p>
+<em>Methylobacterium</em> and <em>Sphingomonas</em> (Wilcoxon,
+<em>Z</em> = 49825.5, <em>p</em> = 1.34^{-36}, <em>r</em> = 0.42
+[0.36-0.47]). Lastly, the time of sampling showed a small yet
+significant effect on bacterial populations (Wilcoxon, <em>Z</em> =
+84973, <em>p</em> = 3.21^{-6}, <em>r</em> = 0.15 [0.06-0.21]).</p>
 <pre class="r"><code>change_cfu_synID = data_cfu %&gt;% 
     group_by(synID) %&gt;% 
     summarise(mean_cfu = mean(cfu)) %&gt;% 
@@ -429,15 +428,74 @@ change_cfu_dpi = data_cfu %&gt;%
     group_by(dpi) %&gt;% 
     summarise(mean_cfu = mean(cfu)) %&gt;% 
     mutate(fold_change = mean_cfu/mean_cfu[1])</code></pre>
+<pre class="r"><code># Dunn&#39;s Test
+data_cfu %&gt;% 
+    dunn_test(cfu_log ~ synID, p.adjust.method = &quot;bonferroni&quot;)</code></pre>
+<pre><code>## # A tibble: 3 × 9
+##   .y.     group1 group2    n1    n2 statistic        p    p.adj p.adj.signif
+## * &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;  &lt;int&gt; &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;       
+## 1 cfu_log C      S2       144   288      4.48 7.34e- 6 2.20e- 5 ****        
+## 2 cfu_log C      S3       144   479     -8.62 6.95e-18 2.08e-17 ****        
+## 3 cfu_log S2     S3       288   479    -17.1  1.08e-65 3.25e-65 ****</code></pre>
 <p>On average, bacterial population densities in S2 increased in 185.03%
-compared to C. By contrast, population densities experienced a -66.99%
+compared to C. By contrast, population densities experienced a 66.99%
 decrease in S3 (Fig. 3a). The population densities of
 <em>Sphingomonas</em> were 73.44% larger than that of
-<em>Methylobacterium</em>,</p>
-<p>Over time, the average <span class="math inline">\(\ CFU
-gFW^{-1}\)</span> increased only 2.33-fold, from 1.74^{7} CFU
-gFW<sup>-1</sup> to 4.06^{7} <span class="math inline">\(\ CFU
-gFW^{-1}\)</span> (Fig. 3b).</p>
+<em>Methylobacterium</em>.</p>
+<p>Over time, the average CFU gFW<sup>-1</sup> increased2.33-fold, from
+1.74^{7} CFU gFW<sup>-1</sup> to 4.06^{7} CFU gFW<sup>-1</sup> (Fig.
+3b).</p>
+<pre class="r"><code>data_cfu %&gt;% 
+    group_by(synID, strain) %&gt;% 
+    tally</code></pre>
+<pre><code>## # A tibble: 15 × 3
+## # Groups:   synID [3]
+##    synID strain     n
+##    &lt;fct&gt; &lt;chr&gt;  &lt;int&gt;
+##  1 C     meL85     32
+##  2 C     meL92     32
+##  3 C     mr01      24
+##  4 C     smfr1     32
+##  5 C     spfa2     24
+##  6 S2    meL85     56
+##  7 S2    meL92     64
+##  8 S2    mr01      60
+##  9 S2    smfr1     52
+## 10 S2    spfa2     56
+## 11 S3    meL85     96
+## 12 S3    meL92     95
+## 13 S3    mr01      96
+## 14 S3    smfr1     96
+## 15 S3    spfa2     96</code></pre>
+<p>The increase in population density in S2 was observed for populations
+of both <em>Methylobacterium</em> and <em>Sphingomonas</em> (Fig. 3c).
+However, within <em>Methylobacterium</em>, MeL92 and Mr0-1 benefited the
+most in S2 (Fig. S1a). In particular, Mr0-1 consistently benefited from
+the presence of individual <em>Sphingomonas</em> strains. However, this
+effect on methylobacteria was lost when a third competitor was present
+(S3), regardless of the competitor’s identity (Fig. S1b).</p>
+<p>The increase in Sphingomonas population density in S2 was mainly
+associated with an increase in SmFR1 populations (Fig. S1a), which was
+higher in every S2 compared to C (Fig. S1b). For SpFA2, only a transient
+effect was observed when this strain was paired with SmFR1 or MeL92;
+however, both populations in each pair increased in density compared to
+C, suggesting facilitative interactions. The decrease in population
+density in S3 communities was observed only for Methylobacterium (Fig.
+3c). The decrease in Methylobacterium population density was accompanied
+by an increase in their coefficient of variation (Fig. 3d). The
+increased coefficient of variation can be attributed to differences in
+densities between the different Methylobacterium strains: MeL85 was most
+impacted and had the lowest mean densities, while Mr0-1 and MeL92 were
+less impacted (Fig. S1a). Within methylobacteria, the largest mean
+difference was between MeL85 (1.58×105 CFU gFW-1) and Mr0-1 (2.51×106
+CFU gFW-1) in S3 (t546 = 11.94, p &lt; 0.001). However, the largest mean
+differences were observed between MeL85 and SmFR1 (75.75×, t894 = 25.79,
+p &lt; 0.001) and with SpFA2 (73.13×, t894 = 25.58, p &lt; 0.001) in S3.
+In general, the decrease in each Methylobacterium population density was
+observed for every S3 community (Fig. S1b). These results indicate that
+bacterial taxa differentially respond to community complexity in the
+phyllosphere and that methylobacteria are more affected compared to
+sphingomonads.</p>
 </div>
 
 
