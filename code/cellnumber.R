@@ -7,7 +7,7 @@ area = 124.94*100.24*1e-8
 data <- readRDS(here('results', 'coordinates.rds'))
 
 # Metadata includes biological replicates (rep) and number of images taken
-metadata <- read.csv(here('data', 'syncom_metadata.csv')) %>% 
+metadata <- read.csv(here('data', 'metadata.csv')) %>% 
     pivot_longer(cols=c(C0, C1, C2), names_to = "channel", values_to = "strain") %>% 
     na.omit
 
