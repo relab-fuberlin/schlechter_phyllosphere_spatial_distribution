@@ -4,8 +4,8 @@
 source("code/libraries_syncom.R")
 
 metadata = read_csv(here('data', 'comm_id.csv'))
-data.S2 = read.csv(here('data', 'syn2_coord_proc.csv'), header = TRUE, row.names = "X")
-data.S3 = read.csv(here('data', 'syn3_coord_proc.csv'), header = TRUE, row.names = "X")
+data.S2 = read.csv(here('data', 'coordinates_S2.csv'), header = TRUE, row.names = "X")
+data.S3 = read.csv(here('data', 'coordinates_S3.csv'), header = TRUE, row.names = "X")
 data.all = rbind(data.S2, data.S3)
 
 metadata %>% print(n=232)
