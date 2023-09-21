@@ -1,14 +1,12 @@
 #!/usr/bin/env Rscript
 
 # Data processing cell coordinates
-source("code/libraries_syncom.R")
+library(tidyverse)
 
 metadata = read_csv(here('data', 'comm_id.csv'))
 data.S2 = read.csv(here('data', 'coordinates_S2.csv'), header = TRUE, row.names = "X")
 data.S3 = read.csv(here('data', 'coordinates_S3.csv'), header = TRUE, row.names = "X")
 data.all = rbind(data.S2, data.S3)
-
-metadata %>% print(n=232)
 
 data.all %>%
     mutate(synID = case_when(
