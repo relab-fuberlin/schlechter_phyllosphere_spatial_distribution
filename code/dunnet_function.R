@@ -45,7 +45,5 @@ fold_func1 <- function(dataframe, cell, group_by_variable, explanatory_variable)
         inner_join(., median_control, by = c(group_by_variable)) %>% 
         mutate(fold = log2(m/m_mono))
     
-    return(result)
+    return(median_control)
 }
-
-

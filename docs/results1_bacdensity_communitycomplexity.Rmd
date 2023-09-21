@@ -51,46 +51,61 @@ We first investigated the effect of community complexity on bacterial population
 
 We used non-parametric methods to analyse the CFU data, considering violation of normality (Shapiro-Wilk test, *W* = `r cfu_normality$statistic`, *p* = `r cfu_normality$p.value`) and homogeneity of variance (Breusch-Pagan test, $\ X^{2}$ = `r cfu_homoskedasticity$ChiSquare`, *p* = `r cfu_homoskedasticity$p`)
 
-```{r cfu_analysis_1}
+```{r cfu_analysis_synID}
 # Kruskal-Wallis test and effect size for community complexity (synID)
 kw_synID = kruskal.test(cfu_log ~ synID, data_cfu)
 keff_synID = kruskal_effsize(formula = cfu_log ~ synID, data = data_cfu, ci=TRUE, nboot=100)
+
 # Dunn's Test
 dunn_synID = dunn_test(cfu_log ~ synID, p.adjust.method = "holm", data=data_cfu)
 
+# Fold change of population density by SynCom complexity (synID)
+fc_cfu_synID = data_cfu %>% 
+    group_by(synID) %>% 
+    summarise(median_cfu = median(cfu)) %>% 
+    mutate(FC = median_cfu/median_cfu[1],
+           logFC = log2(FC))
+```
+
+We first tested the effect of three main factors that influenced changes in bacterial populations, namely the community complexity a population was in, the bacterial taxa that the population belonged to, and the time of sampling (7 or 14 days post inoculation). 
+
+First, community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(`r kw_synID$parameter`) = `r kw_synID$statistic`, *p* = `r kw_synID$p.value`, $\eta^{2}$(`r kw_synID$parameter`) = `r keff_synID$effsize` [`r keff_synID$conf.low`-`r keff_synID$conf.high`]). This was reflected as a significant `r fc_cfu_synID$FC[fc_cfu_synID$synID=="S2"]`-fold increase in population densities composed of two-species communities (*Z* = `r abs(dunn_synID$statistic[1])`, *p* = `r dunn_synID$p.adj[1]`), and a pronounced `r (fc_cfu_synID$FC[fc_cfu_synID$synID=="S3"])^-1`-fold decrease in S3 (*Z* = `r abs(dunn_synID$statistic[2])`, *p* = `r dunn_synID$p.adj[2]`), both compared to C.
+
+(Fig. 3a).
+
+```{r cfu_analysis_taxa}
 # Wilcoxon test and effect size for bacterial group (taxa)
 w_taxa = wilcox.test(formula = cfu_log ~ taxa, data = data_cfu)
 weff_taxa = wilcox_effsize(formula = cfu_log ~ taxa, data = data_cfu, ci=TRUE, nboot=100)
 
+# Fractional change of population density by bacterial group (taxa)
+fc_cfu_taxa = data_cfu %>% 
+    group_by(taxa) %>% 
+    summarise(median_cfu = median(cfu)) %>% 
+    mutate(FC = median_cfu/median_cfu[1],
+           logFC = log2(FC))
+```
+
+## fix here
+
+Second, we observed a difference between populations that belonged to *Methylobacterium* and *Sphingomonas* (Wilcoxon, *Z* = `r w_taxa$statistic`, *p* = `r w_taxa$p.value`, *r* = `r weff_taxa$effsize` [`r weff_taxa$conf.low`-`r weff_taxa$conf.high`]). Lastly, the time of sampling showed a small yet significant effect on bacterial populations (Wilcoxon, *Z* = `r w_dpi$statistic`, *p* = `r w_dpi$p.value`, *r* = `r weff_dpi$effsize` [`r weff_dpi$conf.low`-`r weff_dpi$conf.high`]).
+
+## till here
+
+```{r cfu_analysis_dpi}
 # Wilcoxon test and effect size for sampling time (dpi)
 w_dpi = wilcox.test(formula = cfu_log ~ dpi, data = data_cfu)
 weff_dpi = wilcox_effsize(formula = cfu_log ~ dpi, data = data_cfu, ci=TRUE, nboot=100)
 
-```
-
-We first tested the effect of three main factors that influenced changes in bacterial populations, namely the community complexity a population was in, the bacterial taxa that the population belonged to, and the time of sampling (7 or 14 days post inoculation). First, community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(`r kw_synID$parameter`) = `r kw_synID$statistic`, *p* = `r kw_synID$p.value`, $\eta^{2}$(`r kw_synID$parameter`) = `r keff_synID$effsize` [`r keff_synID$conf.low`-`r keff_synID$conf.high`]). Second, we observed a difference between populations that belonged to *Methylobacterium* and *Sphingomonas* (Wilcoxon, *Z* = `r w_taxa$statistic`, *p* = `r w_taxa$p.value`, *r* = `r weff_taxa$effsize` [`r weff_taxa$conf.low`-`r weff_taxa$conf.high`]). Lastly, the time of sampling showed a small yet significant effect on bacterial populations (Wilcoxon, *Z* = `r w_dpi$statistic`, *p* = `r w_dpi$p.value`, *r* = `r weff_dpi$effsize` [`r weff_dpi$conf.low`-`r weff_dpi$conf.high`]).
-
-```{r descriptive_statistics}
-# Fractional change of population density by SynCom complexity (synID)
-change_cfu_synID = data_cfu %>% 
-    group_by(synID) %>% 
-    summarise(mean_cfu = mean(cfu)) %>% 
-    mutate(fractional_change = 100*(mean_cfu - mean_cfu[1])/mean_cfu[1])
-
-# Fractional change of population density by bacterial group (taxa)
-change_cfu_taxa = data_cfu %>% 
-    group_by(taxa) %>% 
-    summarise(mean_cfu = mean(cfu)) %>% 
-    mutate(fractional_change = 100*(mean_cfu - mean_cfu[1])/mean_cfu[1])
-
 # Fractional change of population density by time of sampling (dpi)
-change_cfu_dpi = data_cfu %>% 
+fc_cfu_dpi = data_cfu %>% 
     group_by(dpi) %>% 
-    summarise(mean_cfu = mean(cfu)) %>% 
-    mutate(fold_change = mean_cfu/mean_cfu[1])
+    summarise(median_cfu = median(cfu)) %>% 
+    mutate(FC = median_cfu/median_cfu[1],
+           logFC = log2(FC))
 ```
 
-On average, bacterial population densities in S2 increased in `r change_cfu_synID %>% filter(synID=="S2") %>% pull()`% compared to C. By contrast, population densities experienced a `r change_cfu_synID %>% filter(synID=="S3") %>% pull()*-1`% decrease in S3 (Fig. 3a). 
+ 
 The population densities of *Sphingomonas* were `r change_cfu_taxa %>% filter(taxa=="Sphingomonas") %>% pull()`% larger than that of *Methylobacterium*.
 
 Over time, the average CFU gFW^-1^ increased `r change_cfu_dpi %>% filter(dpi=="14dpi") %>% pull(fold_change)`-fold, from `r change_cfu_dpi %>% filter(dpi=="07dpi") %>% pull(mean_cfu)`  CFU gFW^-1^ to `r change_cfu_dpi %>% filter(dpi=="14dpi") %>% pull(mean_cfu)` CFU gFW^-1^ (Fig. 3b).
