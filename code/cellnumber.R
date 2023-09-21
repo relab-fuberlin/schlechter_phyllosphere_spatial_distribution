@@ -1,3 +1,6 @@
+#!/usr/bin/env Rscript
+
+library(tidyverse)
 
 # Area in cm2
 area = 124.94*100.24*1e-8
