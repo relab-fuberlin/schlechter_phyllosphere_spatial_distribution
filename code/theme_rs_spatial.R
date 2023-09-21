@@ -6,7 +6,7 @@ theme_rs <- function() {
       strip.placement = "outside",
       strip.text = element_text(size=12, vjust = 1, face="italic"),
       legend.box.spacing = unit(0.1, "line"),
-      legend.key.size = unit(0.1, "cm"),
+      legend.key.size = unit(0.5, "cm"),
       panel.background = element_blank(),
       panel.border = element_rect(size = 1, fill = NA, color = "black"),
       panel.spacing = grid::unit(1.5, "line"),

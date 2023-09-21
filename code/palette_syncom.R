@@ -13,6 +13,9 @@ names(syn.lab) <- c("C", "S2", "S3")
 dpi.lab = c("7", "14")
 names(dpi.lab) <- c("07dpi", "14dpi")
 
+dpi.lab2 = c("7 dpi", "14 dpi")
+names(dpi.lab2) <- c("07dpi", "14dpi")
+
 pattern.lab = c("Aggregated", "CSR", "Regular")
 names(pattern.lab) <- c("f_agg", "f_csr", "f_seg")
 

@@ -15,6 +15,7 @@ library(here)
 source(here('code', 'libraries_syncom.R'))
 source(here('code', 'palette_syncom.R'))
 source(here('code', 'theme_rs_spatial.R'))
+source(here('code', 'dunnet_function.R'))
 
 library(rstatix)
 library(coin)
@@ -55,7 +56,7 @@ We used non-parametric methods to analyse the CFU data, considering violation of
 kw_synID = kruskal.test(cfu_log ~ synID, data_cfu)
 keff_synID = kruskal_effsize(formula = cfu_log ~ synID, data = data_cfu, ci=TRUE, nboot=100)
 # Dunn's Test
-dunn_synID = dunn_test(cfu_log ~ synID, p.adjust.method = "bonferroni", data=data_cfu)
+dunn_synID = dunn_test(cfu_log ~ synID, p.adjust.method = "holm", data=data_cfu)
 
 # Wilcoxon test and effect size for bacterial group (taxa)
 w_taxa = wilcox.test(formula = cfu_log ~ taxa, data = data_cfu)
@@ -70,16 +71,19 @@ weff_dpi = wilcox_effsize(formula = cfu_log ~ dpi, data = data_cfu, ci=TRUE, nbo
 We first tested the effect of three main factors that influenced changes in bacterial populations, namely the community complexity a population was in, the bacterial taxa that the population belonged to, and the time of sampling (7 or 14 days post inoculation). First, community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(`r kw_synID$parameter`) = `r kw_synID$statistic`, *p* = `r kw_synID$p.value`, $\eta^{2}$(`r kw_synID$parameter`) = `r keff_synID$effsize` [`r keff_synID$conf.low`-`r keff_synID$conf.high`]). Second, we observed a difference between populations that belonged to *Methylobacterium* and *Sphingomonas* (Wilcoxon, *Z* = `r w_taxa$statistic`, *p* = `r w_taxa$p.value`, *r* = `r weff_taxa$effsize` [`r weff_taxa$conf.low`-`r weff_taxa$conf.high`]). Lastly, the time of sampling showed a small yet significant effect on bacterial populations (Wilcoxon, *Z* = `r w_dpi$statistic`, *p* = `r w_dpi$p.value`, *r* = `r weff_dpi$effsize` [`r weff_dpi$conf.low`-`r weff_dpi$conf.high`]).
 
 ```{r descriptive_statistics}
+# Fractional change of population density by SynCom complexity (synID)
 change_cfu_synID = data_cfu %>% 
     group_by(synID) %>% 
     summarise(mean_cfu = mean(cfu)) %>% 
     mutate(fractional_change = 100*(mean_cfu - mean_cfu[1])/mean_cfu[1])
 
+# Fractional change of population density by bacterial group (taxa)
 change_cfu_taxa = data_cfu %>% 
     group_by(taxa) %>% 
     summarise(mean_cfu = mean(cfu)) %>% 
     mutate(fractional_change = 100*(mean_cfu - mean_cfu[1])/mean_cfu[1])
 
+# Fractional change of population density by time of sampling (dpi)
 change_cfu_dpi = data_cfu %>% 
     group_by(dpi) %>% 
     summarise(mean_cfu = mean(cfu)) %>% 
@@ -89,32 +93,138 @@ change_cfu_dpi = data_cfu %>%
 On average, bacterial population densities in S2 increased in `r change_cfu_synID %>% filter(synID=="S2") %>% pull()`% compared to C. By contrast, population densities experienced a `r change_cfu_synID %>% filter(synID=="S3") %>% pull()*-1`% decrease in S3 (Fig. 3a). 
 The population densities of *Sphingomonas* were `r change_cfu_taxa %>% filter(taxa=="Sphingomonas") %>% pull()`% larger than that of *Methylobacterium*.
 
-Over time, the average CFU gFW^-1^ increased`r change_cfu_dpi %>% filter(dpi=="14dpi") %>% pull(fold_change)`-fold, from `r change_cfu_dpi %>% filter(dpi=="07dpi") %>% pull(mean_cfu)`  CFU gFW^-1^ to `r change_cfu_dpi %>% filter(dpi=="14dpi") %>% pull(mean_cfu)` CFU gFW^-1^ (Fig. 3b).
+Over time, the average CFU gFW^-1^ increased `r change_cfu_dpi %>% filter(dpi=="14dpi") %>% pull(fold_change)`-fold, from `r change_cfu_dpi %>% filter(dpi=="07dpi") %>% pull(mean_cfu)`  CFU gFW^-1^ to `r change_cfu_dpi %>% filter(dpi=="14dpi") %>% pull(mean_cfu)` CFU gFW^-1^ (Fig. 3b).
+
+```{r, include=FALSE}
+
+explanatory = "synID"
+grouping_factor = c("taxa", "dpi")
+
+dunntest_strain_dpi <- dun_func1(data_cfu, "cfu_log", grouping_factor, explanatory) %>% rename(synID = group2)
+fold_strain_dpi <- fold_func1(data_cfu, "cfu", grouping_factor, explanatory)
+
+plt1 <- inner_join(dunntest_strain_dpi, fold_strain_dpi, by = c(grouping_factor, explanatory)) %>% 
+    filter(group1 == "C") %>% 
+    ggplot(aes(x=synID, y=taxa))+
+    facet_wrap(~dpi, ncol=2, labeller = labeller(dpi=dpi.lab2))+
+    geom_tile(colour= "black", fill= "white", linewidth = 0.1)+
+    geom_point(aes(fill = fold, size = p.adj_new), shape = 21)+
+    coord_fixed()+
+    scale_fill_gradientn(name = bquote(Log[2]~"FC"), colours = wes_palette("Zissou1")[c(1,2,3,5)], 
+                         values = c(0,0.60,1), limits=c(-8,4), breaks=seq(-8,4,4), na.value = 'grey90')+
+    scale_size_continuous(range = c(15,5), breaks = c(0.05, 0.5), 
+                          label = c("< 0.05", "0.5"), name = expression(paste(italic("P"), "-adjusted")))+
+    scale_y_discrete(name="Taxa", labels = taxa.lab)+
+    labs(x = "")+
+    theme_rs()+
+    theme(panel.border = element_blank(),
+          axis.text.x = element_text(hjust=0.5, vjust=3),
+          axis.text.y = element_text(face="italic"),
+          strip.text = element_text(face="plain"))
+
+```
+
+```{r, include=FALSE}
+
+grouping_factor = c("strain", "dpi")
+
+dunntest_strain_dpi <- dun_func1(data_cfu, "cfu_log", grouping_factor, "synID") %>% rename(synID = group2)
+fold_strain_dpi <- fold_func1(data_cfu, "cfu", grouping_factor, "synID")
+
+plt2 <- inner_join(dunntest_strain_dpi, fold_strain_dpi, by = c("strain", "dpi", "synID")) %>% 
+    filter(group1 == "C") %>% 
+    ggplot(aes(x=synID, y=strain))+
+    facet_wrap(~dpi, ncol=2, labeller = labeller(dpi=dpi.lab2))+
+    geom_tile(colour= "black", fill= "white", linewidth = 0.1)+
+    geom_point(aes(fill = fold, size = p.adj_new), shape = 21)+
+    coord_fixed()+
+    scale_fill_gradientn(name = bquote(Log[2]~"FC"), colours = wes_palette("Zissou1")[c(1,2,3,5)], 
+                         values = c(0,0.60,1), limits=c(-8,4), breaks=seq(-8,4,4), na.value = 'grey90')+
+    scale_size_continuous(range = c(15,5), breaks = c(0.05, 0.5), 
+                          label = c("< 0.05", "0.5"), name = expression(paste(italic("P"), "-adjusted")))+
+    scale_y_discrete(name="Focal strain", labels = sp.lab)+
+    scale_x_discrete(name="Community Complexity", labels = sp.lab)+
+    theme_rs()+
+    theme(panel.border = element_blank(),
+          axis.text.x = element_text(hjust=0.5, vjust=3),
+          strip.text = element_text(face="plain"))
+```
 
 ```{r}
-data_cfu %>% 
-    dplyr::select(syncom, strain) %>% 
-    unique() %>% 
-    mutate(presence = 1) %>% 
-    pivot_wider(id_cols = syncom, names_from = strain, values_from=presence, values_fill = 0) %>% 
-    column_to_rownames(var = "syncom") %>% 
-    as.matrix
+plt1/plt2+plot_layout(guides="collect", heights = c(2,5))
+```
+
+
+
+```{r, include=TRUE}
+
+dunntest_syncom <- dun_func1(data_cfu, "cfu_log", "strain", "syncom") %>% 
+    separate(group1, into=c('synID', 'com')) %>% 
+    rename(syncom = group2) %>% 
+    group_by(strain) %>% 
+    filter(synID=="C") %>% 
+    select(-synID:-com)
+
+dunn_S2 = dunntest_syncom %>% 
+    separate(syncom, into = c('synID', 'com'), remove = FALSE) %>% 
+    filter(synID == "S2") %>% 
+    select(syncom,strain, p.adj_new) %>% 
+    group_by(syncom) %>% 
+    mutate(to=rev(strain)) %>% 
+    ungroup() %>% 
+    select(syncom, strain, to, p.adj_new)
+
+dunn_test_long <- dunntest_syncom %>% 
+    separate(syncom, into = c('synID', 'com'), remove = FALSE) %>% 
+    filter(synID == "S3") %>% 
+    mutate(to = syncom) %>% 
+    select(syncom, strain, to, p.adj_new) %>% 
+    rbind(dunn_S2,.) %>% 
+    select(strain:p.adj_new) %>% 
+    rename(name=to)
 
 data_median_control = data_cfu %>% 
     filter(synID == "C") %>% 
     group_by(strain) %>% 
     summarise(m_mono = median(cfu), .groups="drop")
-
+    
 data_fold = data_cfu %>% 
     group_by(synID, syncom, strain) %>% 
     summarise(m = median(cfu), .groups="drop") %>% 
     inner_join(., data_median_control, by = c("strain")) %>%
     filter(synID != "C") %>% 
-    mutate(fold = log2(m/m_mono))
+    mutate(fold = log2(m/m_mono)) %>% 
+    left_join(., dunntest_syncom, by = c("strain", "syncom"))
 
-data_cfu %>% 
-    group_by(taxa) %>% 
-    dunn_test(cfu_log ~ synID, p.adjust.method = 'bonferroni')
+data_fold_S2 = data_fold %>% 
+    filter(synID == "S2") %>% 
+    select(syncom,strain, fold) %>% 
+    group_by(syncom) %>% 
+    mutate(to=rev(strain)) %>% 
+    pivot_wider(id_cols=strain, names_from = to, values_from = fold) %>% 
+    select(strain, meL85, meL92, mr01, smfr1, spfa2) %>% 
+    arrange(strain)
+
+data_fold_S3 = data_fold %>% 
+    filter(synID == "S3") %>% 
+    pivot_wider(id_cols=strain, names_from = syncom, values_from=fold) %>% 
+    arrange(strain)
+
+cbind(data_fold_S2, data_fold_S3[,-1]) %>% 
+    pivot_longer(cols = -strain) %>% 
+    mutate(index = seq(1:nrow(.))) %>%
+    left_join(., dunn_test_long, by = c("strain", "name")) %>% 
+    ggplot(aes(y=strain, x=fct_reorder(name, index)))+
+    geom_tile(colour= "black", fill= "white", linewidth = 0.1)+
+    geom_point(aes(fill = value, size = p.adj_new), shape = 21)+
+    scale_fill_gradientn(name = "Log2FC", colours = wes_palette("Zissou1")[c(1,2,3,5)], values = c(0,0.60,1), limits=c(-8,4), breaks=seq(-8,4,4), na.value = 'grey90')+
+    scale_size_continuous(range = c(12,5), breaks = c(0.05, 1), label = c("< 0.05", ">= 0.05"), name = "P-adjusted")+
+    coord_fixed()+
+    scale_y_discrete(name="Focal strain", labels = sp.lab)+
+    scale_x_discrete(name="Competitor(s)", labels = sp.lab)+
+    theme_rs()+
+    theme(panel.border = element_blank(),
+          axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
 
 ```
 
