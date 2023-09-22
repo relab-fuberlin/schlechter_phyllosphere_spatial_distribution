@@ -43,4 +43,5 @@ H$syncom = summary_data$syncom
 H$dpi = summary_data$dpi
 
 # Export data
-saveRDS(H, 'results/hyperframe.rds')
+saveRDS(H, here('results', 'hyperframe.rds'))
+saveRDS(summary_data, here('results', 'hyperframe_summary.rds'))
