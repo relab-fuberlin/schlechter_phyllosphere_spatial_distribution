@@ -120,7 +120,7 @@ fc_cfu_dpi = data_cfu %>%
            logFC = log2(FC))
 ```
 
-Changes in population density could be related to temporal changes. Thus, we evaluated how population density changed over the two times of sampling, 7 dpi and 14 dpi. Here we observed a small yet significant effect of time of sampling (Wilcoxon, *Z* = `r w_dpi$statistic`, *p* = `r w_dpi$p.value`, *r* = `r weff_dpi$effsize` [`r weff_dpi$conf.low`-`r weff_dpi$conf.high`]). However, since populations only increased `r fc_cfu_dpi$FC[fc_cfu_dpi$dpi=="14dpi"]`-fold between 7 and 14 dpi, and considering that overall changes were consistent, we continued our analysis by grouping the data collected from each sampling point.
+Changes in population density could be related to temporal changes. Thus, we evaluated how population density changed over the two times of sampling, 7 dpi and 14 dpi. Here we observed a small yet significant effect of time of sampling (Wilcoxon, *Z* = `r w_dpi$statistic`, *p* = `r w_dpi$p.value`, *r* = `r weff_dpi$effsize` [`r weff_dpi$conf.low`-`r weff_dpi$conf.high`]). This represented an increase in `r fc_cfu_dpi$FC[fc_cfu_dpi$dpi=="14dpi"]`-fold between 7 and 14 dpi.
 
 
 ```{r plot fig3b}
@@ -166,7 +166,7 @@ plt1/plt2+plot_layout(heights = c(2,5), guides="collect")
 
 
 
-```{r, include=TRUE}
+```{r, include=FALSE}
 
 dunntest_syncom <- dun_func1(data_cfu, "cfu_log", c("strain", "dpi"), "syncom") %>% 
     separate(group1, into=c('synID', 'com')) %>% 
@@ -220,7 +220,7 @@ data_fold_S3 = data_fold %>%
     pivot_wider(id_cols=c(strain, dpi), names_from = syncom, values_from=fold) %>% 
     arrange(strain)
 
-cbind(data_fold_S2, data_fold_S3[,c(-1:-2)]) %>% 
+plt.sup1 = cbind(data_fold_S2, data_fold_S3[,c(-1:-2)]) %>% 
     pivot_longer(cols = -c(strain,dpi)) %>% 
     ungroup %>% 
     arrange(dpi,strain) %>% 
@@ -240,9 +240,11 @@ cbind(data_fold_S2, data_fold_S3[,c(-1:-2)]) %>%
     theme(panel.border = element_blank(),
           axis.text.x = element_text(angle=90, hjust=1, vjust=0.5),
           strip.text = element_text(face="plain"))
-
 ```
 
+```{r plot sup1}
+plt.sup1
+```
 
 The increase in population density in S2 was observed for populations of both *Methylobacterium* and *Sphingomonas* (Fig. 3c). However, within *Methylobacterium*, MeL92 and Mr0-1 benefited the most in S2 (Fig. S1a). In particular, Mr0-1 consistently benefited from the presence of individual *Sphingomonas* strains. However, this effect on methylobacteria was lost when a third competitor was present (S3), regardless of the competitor’s identity (Fig. S1b).
 
