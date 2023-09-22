@@ -18,7 +18,8 @@ dun_func1 <- function(dataframe, cell_log, group_by_variable, explanatory_variab
         dunn_test(as.formula(formula_str), p.adjust.method = 'holm', detailed = TRUE) %>% 
         select(!!!syms(group_by_variable), group1, group2, estimate, statistic, p.adj) %>% 
         group_by(!!!syms(group_by_variable)) %>% 
-        mutate(p.adj_new = case_when(p.adj < 0.05 ~ 0.05, TRUE ~ p.adj))
+        mutate(p_label = case_when(p.adj < 0.05 ~ "< 0.05", TRUE ~ as.character(p.adj)),
+               p_size = case_when(p.adj < 0.05 ~ 0.05, TRUE ~ p.adj))
     
     return(result)
 }
@@ -34,7 +35,7 @@ fold_func1 <- function(dataframe, cell, group_by_variable, explanatory_variable)
     # 3nd arg: vector of column names as grouping factor(s)
     # 4th arg: str character of name explanatory variable
     
-    median_control = data_cfu %>% 
+    median_control = dataframe %>% 
         filter(synID == "C") %>% 
         group_by(!!!syms(group_by_variable)) %>% 
         summarise(m_mono = median(!!!syms(cell)), .groups="drop")
@@ -43,7 +44,8 @@ fold_func1 <- function(dataframe, cell, group_by_variable, explanatory_variable)
         group_by(!!!syms(group_by_variable), !!!syms(explanatory_variable)) %>% 
         summarise(m = median(!!!syms(cell)), .groups="drop") %>% 
         inner_join(., median_control, by = c(group_by_variable)) %>% 
-        mutate(fold = log2(m/m_mono))
+        mutate(FC = m/m_mono,
+               log2FC= log2(FC))
     
-    return(median_control)
+    return(result)
 }
