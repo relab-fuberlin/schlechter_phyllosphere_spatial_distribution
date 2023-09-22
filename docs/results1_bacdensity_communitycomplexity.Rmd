@@ -1,13 +1,14 @@
 ---
 title: "Spatial distribution paper - Section 1"
 author: "Rudolf Schlechter"
-date: "2023-09-20"
-output: html_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-options(digits = 2, scipen = 1)
+knitr::opts_chunk$set(echo = TRUE, fig.align='center')
+options(digits = 2, scipen = 1, pillar.signif = 3)
 
 library(here)
 #library(kableExtra)
@@ -73,6 +74,22 @@ We tested how the community complexity influenced changes in individual bacteria
 
 (Fig. 3a): CFU vs SynCom
 
+```{r cfu_analysis_dpi}
+# Wilcoxon test and effect size for sampling time (dpi)
+w_dpi = wilcox.test(formula = cfu_log ~ dpi, data = data_cfu) %>% tidy %>% 
+    mutate(p_label = case_when(p.value < 0.05 ~ "< 0.05", TRUE ~ as.character(p.value)))
+weff_dpi = wilcox_effsize(formula = cfu_log ~ dpi, data = data_cfu, ci=TRUE, nboot=100)
+
+# Fold change of population density by time of sampling (dpi)
+fc_cfu_dpi = data_cfu %>% 
+    group_by(dpi) %>% 
+    summarise(median_cfu = median(cfu)) %>% 
+    mutate(FC = median_cfu/median_cfu[1],
+           logFC = log2(FC))
+```
+
+Changes in population density could be related to temporal changes. Thus, we evaluated how population density changed over the two times of sampling, 7 dpi and 14 dpi. Here we observed a small yet significant effect of time of sampling (Wilcoxon, *Z* = `r w_dpi$statistic`, *p* = `r w_dpi$p.value`, *r* = `r weff_dpi$effsize` [`r weff_dpi$conf.low`-`r weff_dpi$conf.high`]). This represented an increase in `r fc_cfu_dpi$FC[fc_cfu_dpi$dpi=="14dpi"]`-fold between 7 and 14 dpi.
+
 ```{r cfu_analysis_taxa}
 # Wilcoxon test and effect size for bacterial group (taxa)
 w_taxa = wilcox.test(formula = cfu_log ~ taxa, data = data_cfu) %>% tidy %>% 
@@ -102,26 +119,15 @@ dunntest_strain_dpi <- dun_func1(data_cfu, "cfu_log", strain_dpi, explanatory) %
 fold_strain_dpi <- fold_func1(data_cfu, "cfu", strain_dpi, explanatory)
 ```
 
-We wanted to test whether the observed change in population density was associated to specific bacterial taxa. Consequently, we observed a difference between populations that belonged to *Methylobacterium* and *Sphingomonas* (Wilcoxon, *Z* = `r w_taxa$statistic`, *p* = `r w_taxa$p_label`, *r* = `r weff_taxa$effsize` [`r weff_taxa$conf.low`-`r weff_taxa$conf.high`]). The population densities of *Sphingomonas* were `r fc_cfu_taxa$FC[fc_cfu_taxa$taxa=="Sphingomonas"]` times larger than that of *Methylobacterium*. Within *Sphingomonas*, SmFR1 consistently increased population sizes in S2 and S3 communities compared to C, while SpFA2 increased in S2 but decreased lightly in S3. By contrast, all *Methylobacterium* species (MeL85, MeL92, and Mr0-1) consistently decreased in population sizes in S3. Within *Methylobacterium*, MeL92 and Mr0-1 benefited in S2 communities while MeL85 always failed to increased in population sizes.
+We wanted to test whether the observed change in population density was associated to specific bacterial taxa. Consequently, we observed a difference between populations that belonged to *Methylobacterium* and *Sphingomonas* (Wilcoxon, *Z* = `r w_taxa$statistic`, *p* = `r w_taxa$p_label`, *r* = `r weff_taxa$effsize` [`r weff_taxa$conf.low`-`r weff_taxa$conf.high`]). The population densities of *Sphingomonas* were `r fc_cfu_taxa$FC[fc_cfu_taxa$taxa=="Sphingomonas"]` times larger than that of *Methylobacterium*. 
+
+Within *Sphingomonas*, SmFR1 consistently increased population sizes in S2, regardless of the presence of a second species, and to a lesser extent in S3 (Fig. Sup). For SpFA2, while population sizes increased transiently in S2, they generally decreased in S3.
+
+By contrast, *Methylobacterium* species responded differently to community complexity. In general, MeL85, MeL92, and Mr0-1 consistently decreased in population sizes, especially in S3 and less pronounced in S2. Within *Methylobacterium*, MeL92 and Mr0-1 benefited from the presence of one other species (S2). This effect was only observed at 14 dpi, and it was lost when a third competitor was present (S3), regardless of the competitor's identity. MeL85 was the most susceptible species to decreasing in population size over time and across different community complexities and compositions (Fig. Sup).
+
+These results indicated that bacterial taxa differentially respond to community complexity in the phyllosphere and that *Methylobacterium* are more affected compared to *Sphingomonas*. The most competitive species was the sphingomonad SmFR1, while the most susceptible was the methylobacterium MeL85.
 
 Fig.3b: Fold change taxa
-
-```{r cfu_analysis_dpi}
-# Wilcoxon test and effect size for sampling time (dpi)
-w_dpi = wilcox.test(formula = cfu_log ~ dpi, data = data_cfu) %>% tidy %>% 
-    mutate(p_label = case_when(p.value < 0.05 ~ "< 0.05", TRUE ~ as.character(p.value)))
-weff_dpi = wilcox_effsize(formula = cfu_log ~ dpi, data = data_cfu, ci=TRUE, nboot=100)
-
-# Fold change of population density by time of sampling (dpi)
-fc_cfu_dpi = data_cfu %>% 
-    group_by(dpi) %>% 
-    summarise(median_cfu = median(cfu)) %>% 
-    mutate(FC = median_cfu/median_cfu[1],
-           logFC = log2(FC))
-```
-
-Changes in population density could be related to temporal changes. Thus, we evaluated how population density changed over the two times of sampling, 7 dpi and 14 dpi. Here we observed a small yet significant effect of time of sampling (Wilcoxon, *Z* = `r w_dpi$statistic`, *p* = `r w_dpi$p.value`, *r* = `r weff_dpi$effsize` [`r weff_dpi$conf.low`-`r weff_dpi$conf.high`]). This represented an increase in `r fc_cfu_dpi$FC[fc_cfu_dpi$dpi=="14dpi"]`-fold between 7 and 14 dpi.
-
 
 ```{r plot fig3b}
 plt1 <- inner_join(dunntest_taxa_dpi, fold_taxa_dpi, by = c("taxa", "dpi", "synID")) %>% 
@@ -164,9 +170,7 @@ plt2 <- inner_join(dunntest_strain_dpi, fold_strain_dpi, by = c("strain", "dpi",
 plt1/plt2+plot_layout(heights = c(2,5), guides="collect")
 ```
 
-
-
-```{r, include=FALSE}
+```{r plot sup1 setup, include=FALSE}
 
 dunntest_syncom <- dun_func1(data_cfu, "cfu_log", c("strain", "dpi"), "syncom") %>% 
     separate(group1, into=c('synID', 'com')) %>% 
@@ -227,11 +231,11 @@ plt.sup1 = cbind(data_fold_S2, data_fold_S3[,c(-1:-2)]) %>%
     mutate(index = seq(1:nrow(.))) %>% 
     left_join(., dunn_test_long, by = c("strain", "dpi", "name")) %>% 
     ggplot(aes(y=strain, x=fct_reorder(name, index)))+
-    facet_wrap(~dpi, ncol=1)+
+    facet_wrap(~dpi, ncol=1, labeller = labeller(dpi=dpi.lab2))+
     geom_tile(colour= "black", fill= "white", linewidth = 0.1)+
     geom_point(aes(fill = value, size = p_size), shape = 21)+
     scale_fill_gradientn(name = bquote(Log[2]~"FC"), colours = wes_palette("Zissou1")[c(1,2,3,5,5)], values = c(0,0.57,1), limits=c(-10,8), breaks=seq(-8,4,4), na.value = 'grey90')+
-    scale_size_continuous(range = c(15,3), breaks = c(0.05, 0.5, 1), 
+    scale_size_continuous(range = c(12,3), breaks = c(0.05, 0.5, 1), 
                           label = c("< 0.05", "0.5", "1.0"), name = expression(paste(italic("P"), "-adjusted")))+
     coord_fixed()+
     scale_y_discrete(name="Focal strain", labels = sp.lab)+
@@ -242,15 +246,6 @@ plt.sup1 = cbind(data_fold_S2, data_fold_S3[,c(-1:-2)]) %>%
           strip.text = element_text(face="plain"))
 ```
 
-```{r plot sup1}
+```{r plot sup1, warning=FALSE}
 plt.sup1
 ```
-
-The increase in population density in S2 was observed for populations of both *Methylobacterium* and *Sphingomonas* (Fig. 3c). However, within *Methylobacterium*, MeL92 and Mr0-1 benefited the most in S2 (Fig. S1a). In particular, Mr0-1 consistently benefited from the presence of individual *Sphingomonas* strains. However, this effect on methylobacteria was lost when a third competitor was present (S3), regardless of the competitor’s identity (Fig. S1b).
-
-
-The increase in Sphingomonas population density in S2 was mainly associated with an increase in SmFR1 populations (Fig. S1a), which was higher in every S2 compared to C (Fig. S1b). For SpFA2, only a transient effect was observed when this strain was paired with SmFR1 or MeL92; however, both populations in each pair increased in density compared to C, suggesting facilitative interactions.
-The decrease in population density in S3 communities was observed only for Methylobacterium (Fig. 3c). The decrease in Methylobacterium population density was accompanied by an increase in their coefficient of variation (Fig. 3d). The increased coefficient of variation can be attributed to differences in densities between the different Methylobacterium strains: MeL85 was most impacted and had the lowest mean densities, while Mr0-1 and MeL92 were less impacted (Fig. S1a). Within methylobacteria, the largest mean difference was between MeL85 (1.58×105 CFU gFW-1) and Mr0-1 (2.51×106 CFU gFW-1) in S3 (t546 = 11.94, p < 0.001). However, the largest mean differences were observed between MeL85 and SmFR1 (75.75×, t894 = 25.79, p < 0.001) and with SpFA2 (73.13×, t894 = 25.58, p < 0.001) in S3. In general, the decrease in each Methylobacterium population density was observed for every S3 community (Fig. S1b).
-These results indicate that bacterial taxa differentially respond to community complexity in the phyllosphere and that methylobacteria are more affected compared to sphingomonads.
-
-
