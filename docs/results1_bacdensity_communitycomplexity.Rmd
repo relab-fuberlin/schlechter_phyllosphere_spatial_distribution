@@ -125,9 +125,9 @@ We wanted to test whether the observed change in population density was associat
 
 Within *Sphingomonas*, SmFR1 consistently increased population sizes in S2, regardless of the presence of a second species, and to a lesser extent in S3 (Fig. Sup). For SpFA2, while population sizes increased transiently in S2, they generally decreased in S3.
 
-By contrast, *Methylobacterium* species responded differently to community complexity. In general, MeL85, MeL92, and Mr0-1 consistently decreased in population sizes, especially in S3 and less pronounced in S2. Within *Methylobacterium*, MeL92 and Mr0-1 benefited from the presence of one other species (S2). This effect was only observed at 14 dpi, and it was lost when a third competitor was present (S3), regardless of the competitor's identity. MeL85 was the most susceptible species to decreasing in population size over time and across different community complexities and compositions (Fig. Sup).
+By contrast, *Methylobacterium* species responded negatively to community complexity. In general, MeL85, MeL92, and Mr0-1 consistently decreased in population sizes, especially in S3 and less pronounced in S2. Within *Methylobacterium*, MeL92 and Mr0-1 benefited from the presence of one other species (S2). However, this effect was only observed at 14 dpi and it was lost when a third competitor was present (S3). MeL85 was the most susceptible species to decreasing in population size over time and across different community complexities and compositions (Fig. Sup).
 
-These results indicated that bacterial taxa differentially respond to community complexity in the phyllosphere and that *Methylobacterium* are more affected compared to *Sphingomonas*. The most competitive species was the sphingomonad SmFR1, while the most susceptible was the methylobacterium MeL85.
+These results indicated that bacterial taxa differentially responded to community complexity in the phyllosphere and that *Methylobacterium* are more affected compared to *Sphingomonas*. The most competitive species was the sphingomonad SmFR1, while the most susceptible was the methylobacterium MeL85.
 
 Fig.3b: Fold change taxa
 
@@ -143,7 +143,7 @@ plt1 <- inner_join(dunntest_taxa_dpi, fold_taxa_dpi, by = c("taxa", "dpi", "synI
                          values = c(0,0.55,1), limits=c(-8,4), breaks=seq(-8,4,4), na.value = 'grey90')+
     scale_size_continuous(range = c(15,3), breaks = c(0.05, 0.5, 1), limits = c(0,1), 
                           label = c("< 0.05", "0.5", "1.0"), name = expression(paste(italic("P"), "-adjusted")))+
-    scale_y_discrete(name="Taxa", labels = taxa.lab)+
+    scale_y_discrete(name="", labels = taxa.lab)+
     labs(x = "")+
     theme_rs()+
     theme(panel.border = element_blank(),
@@ -162,14 +162,14 @@ plt2 <- inner_join(dunntest_strain_dpi, fold_strain_dpi, by = c("strain", "dpi",
     scale_size_continuous(range = c(15,3), breaks = c(0.05, 0.5, 1), limits = c(0,1),
                           label = c("< 0.05", "0.5", "1.0"), name = expression(paste(italic("P"), "-adjusted")))+
     scale_y_discrete(name="Focal strain", labels = sp.lab)+
-    scale_x_discrete(name="Community Complexity", labels = sp.lab)+
+    scale_x_discrete(name="SynCom", labels = sp.lab)+
     theme_rs()+
     theme(panel.border = element_blank(),
           axis.text.x = element_text(hjust=0.5, vjust=3),
           strip.text = element_text(face="plain"))+
     guides(size = "none")
 
-plt1/plt2+plot_layout(heights = c(2,5), guides="collect")
+patch <- ( plt1 / plt2 ) + plot_layout(guides="collect", heights = c(2,5))
 ```
 
 ```{r plot sup1 setup, include=FALSE}
@@ -251,3 +251,38 @@ plt.sup1 = cbind(data_fold_S2, data_fold_S3[,c(-1:-2)]) %>%
 ```{r plot sup1, warning=FALSE}
 plt.sup1
 ```
+```{r}
+# Plot CFU syncom
+# Multiple comparisons
+plt.cfu.stat = dunn_synID %>% mutate(p.adj.signif = case_when(p.adj.signif == "****" ~ "*", TRUE ~ p.adj.signif),
+                                     y.position = c(9,9.5,10))
+
+plt.cfu <- data_cfu %>% 
+    ggplot(aes(synID, cfu_log))+
+    stat_eye(
+        side="right",
+        adjust = 1,
+        justification = -0.3,
+        .width = 0,
+        scale = 0.5,
+        point_colour = NA)+
+    geom_jitter(width = 0.1, alpha = 0.1)+
+    geom_boxplot(fill="white", width=0.2, outlier.alpha = 0)+
+    coord_cartesian(xlim=c(1,3.2))+
+    stat_pvalue_manual(
+        data = plt.cfu.stat,
+        size = 5,
+        label = "p.adj.signif",
+        xmin = "group1", xmax = "group2",
+        y.position = "y.position")+
+    scale_y_continuous(limits = c(3.5,10.2), breaks=c(4,6,8,10))+
+    labs(y = plt_bac_density_lab,
+         x = "SynCom")+
+    theme_rs()+
+    theme(axis.text.x = element_text(hjust=0.5, vjust=3))
+```
+
+```{r}
+plt.cfu + patch + plot_annotation(tag_levels = "A")
+```
+
