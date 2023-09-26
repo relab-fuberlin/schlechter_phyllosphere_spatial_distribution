@@ -25,6 +25,7 @@ names(pair.lab) = c('meth85_meth92', 'meth85_mr01', 'meth92_mr01','smfr1_spfa2',
                      'meth85_smfr1', 'meth85_spfa2', 'meth92_smfr1', 'meth92_spfa2','mr01_smfr1','mr01_spfa2')
 
 plt_bac_density_lab = bquote('Bacterial density ['*log[10]~ "CFU g" ~ FW^-1 *"]")
+plt_bac_cell_density_lab = bquote('Bacterial cell density ['*log[10]~ "cell" ~ cm^-2 *"]")
 plt_days_lab = "Days post-inoculation [dpi]"
 
 ##    PALETTES
