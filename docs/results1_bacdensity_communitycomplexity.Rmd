@@ -167,9 +167,8 @@ plt2 <- inner_join(dunntest_strain_dpi, fold_strain_dpi, by = c("strain", "dpi",
     theme(panel.border = element_blank(),
           axis.text.x = element_text(hjust=0.5, vjust=3),
           strip.text = element_text(face="plain"))+
-    guides(size = "none")
+    guides(size = "none", fill="none")
 
-patch <- ( plt1 / plt2 ) + plot_layout(guides="collect", heights = c(2,5))
 ```
 
 ```{r plot sup1 setup, include=FALSE}
@@ -254,8 +253,8 @@ plt.sup1
 ```{r}
 # Plot CFU syncom
 # Multiple comparisons
-plt.cfu.stat = dunn_synID %>% mutate(p.adj.signif = case_when(p.adj.signif == "****" ~ "*", TRUE ~ p.adj.signif),
-                                     y.position = c(9,9.5,10))
+plt.cfu.stat = dunn_synID %>% 
+    mutate(p.adj.signif = case_when(p.adj.signif == "****" ~ "*", TRUE ~ p.adj.signif), y.position = c(9,10,9.5))
 
 plt.cfu <- data_cfu %>% 
     ggplot(aes(synID, cfu_log))+
@@ -279,10 +278,12 @@ plt.cfu <- data_cfu %>%
     labs(y = plt_bac_density_lab,
          x = "SynCom")+
     theme_rs()+
-    theme(axis.text.x = element_text(hjust=0.5, vjust=3))
+    theme(axis.text.x = element_text(hjust=0.5, vjust=1.5))
 ```
 
-```{r}
-plt.cfu + patch + plot_annotation(tag_levels = "A")
+```{r figure_main_3}
+areas <- c(patchwork::area(1,1,3), patchwork::area(1,2,1), patchwork::area(2,2,3))
+wrap_elements(full = plt.cfu) + plt1 + plt2  + plot_annotation(tag_levels = "A") + plot_layout(design = areas, guides = "collect") & theme(legend.box.just = "center")
+
 ```
 
