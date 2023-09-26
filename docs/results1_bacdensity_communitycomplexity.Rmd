@@ -70,8 +70,7 @@ fc_cfu_synID = data_cfu %>%
            logFC = log2(FC))
 ```
 
-
-We tested how the community complexity influenced changes in individual bacterial populations. Community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(`r kw_synID$parameter`) = `r kw_synID$statistic`, *p* = `r kw_synID$p_label`, $\eta^{2}$(`r kw_synID$parameter`) = `r keff_synID$effsize` [`r keff_synID$conf.low`-`r keff_synID$conf.high`]). This was reflected as a significant `r fc_cfu_synID$FC[fc_cfu_synID$synID=="S2"]`-fold increase in population densities composed of two-species communities (*Z* = `r abs(dunn_synID$statistic[1])`, *p* `r dunn_synID$p_label[1]`), and a pronounced `r (fc_cfu_synID$FC[fc_cfu_synID$synID=="S3"])^-1`-fold decrease in S3 (*Z* = `r abs(dunn_synID$statistic[2])`, *p* `r dunn_synID$p_label[2]`), both compared to the near-isogenic control, C (Figure 3A).
+We tested how the community complexity influenced changes in individual bacterial populations. Community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(`r kw_synID$parameter`) = `r kw_synID$statistic`, *p* = `r kw_synID$p_label`, $\eta^{2}$(`r kw_synID$parameter`) = `r keff_synID$effsize` [`r keff_synID$conf.low`-`r keff_synID$conf.high`]). This was reflected as a significant `r fc_cfu_synID$FC[fc_cfu_synID$synID=="S2"]`-fold increase in population densities composed of two-species communities (*Z* = `r abs(dunn_synID$statistic[1])`, *p* `r dunn_synID$p_label[1]`), and a pronounced `r (fc_cfu_synID$FC[fc_cfu_synID$synID=="S3"])^-1`-fold decrease in S3 (*Z* = `r abs(dunn_synID$statistic[2])`, *p* `r dunn_synID$p_label[2]`), both compared to the near-isogenic control, C (Figure \@ref(fig:figure_main_3)).
 
 ```{r cfu_analysis_dpi}
 # Wilcoxon test and effect size for sampling time (dpi)
@@ -118,13 +117,88 @@ dunntest_strain_dpi <- dun_func1(data_cfu, "cfu_log", strain_dpi, explanatory) %
 fold_strain_dpi <- fold_func1(data_cfu, "cfu", strain_dpi, explanatory)
 ```
 
-We wanted to test whether the observed change in population density was associated to specific bacterial taxa. Consequently, we observed a difference between populations that belonged to *Methylobacterium* and *Sphingomonas* (Wilcoxon, *Z* = `r w_taxa$statistic`, *p* = `r w_taxa$p_label`, Wilcoxon's *r* = `r weff_taxa$effsize` [`r weff_taxa$conf.low`-`r weff_taxa$conf.high`]). The population densities of *Sphingomonas* were `r fc_cfu_taxa$FC[fc_cfu_taxa$taxa=="Sphingomonas"]` times larger than that of *Methylobacterium* (Figure 3B). 
+We wanted to test whether the observed change in population density was associated to specific bacterial taxa. Consequently, we observed a difference between populations that belonged to *Methylobacterium* and *Sphingomonas* (Wilcoxon, *Z* = `r w_taxa$statistic`, *p* = `r w_taxa$p_label`, Wilcoxon's *r* = `r weff_taxa$effsize` [`r weff_taxa$conf.low`-`r weff_taxa$conf.high`]). The population densities of *Sphingomonas* were `r fc_cfu_taxa$FC[fc_cfu_taxa$taxa=="Sphingomonas"]` times larger than that of *Methylobacterium*. 
 
-Within *Sphingomonas*, SmFR1 consistently increased population sizes in S2, regardless of the presence of a second species, and to a lesser extent in S3 (Figure 3C). For SpFA2, while population sizes increased transiently in S2, they generally decreased in S3.
+Within *Sphingomonas*, SmFR1 consistently increased population sizes in S2, regardless of the presence of a second species, and to a lesser extent in S3 (Fig. Sup). For SpFA2, while population sizes increased transiently in S2, they generally decreased in S3.
 
-By contrast, *Methylobacterium* species responded negatively to community complexity. In general, MeL85, MeL92, and Mr0-1 consistently decreased in population sizes, especially in S3 and less pronounced in S2 (Figure 3C). Within *Methylobacterium*, MeL92 and Mr0-1 benefited from the presence of any other species (S2). However, this effect was only observed at 14 dpi and it was lost when a third competitor was present (S3). MeL85 was the most susceptible species to decreasing in population size over time, and across different community complexities and compositions (Fig. Sup).
+By contrast, *Methylobacterium* species responded negatively to community complexity. In general, MeL85, MeL92, and Mr0-1 consistently decreased in population sizes, especially in S3 and less pronounced in S2. Within *Methylobacterium*, MeL92 and Mr0-1 benefited from the presence of any other species (S2). However, this effect was only observed at 14 dpi and it was lost when a third competitor was present (S3). MeL85 was the most susceptible species to decreasing in population size over time, and across different community complexities and compositions (Fig. Sup).
 
 These results indicated that bacterial taxa differentially responded to community complexity in the phyllosphere and that *Methylobacterium* are more affected compared to *Sphingomonas*. The most competitive species was the sphingomonad SmFR1, while the most susceptible was the methylobacterium MeL85.
+
+```{r figure_main_3_setup, include = FALSE}
+# Plot CFU
+# Multiple comparisons
+plt.cfu.stat = dunn_synID %>% 
+    mutate(p.adj.signif = case_when(p.adj.signif == "****" ~ "*", TRUE ~ p.adj.signif), y.position = c(9,10,9.5))
+
+plt3.a <- data_cfu %>% 
+    ggplot(aes(synID, cfu_log))+
+    stat_eye(
+        side="right",
+        adjust = 1,
+        justification = -0.3,
+        .width = 0,
+        scale = 0.5,
+        point_colour = NA)+
+    geom_jitter(width = 0.1, alpha = 0.1)+
+    geom_boxplot(fill="white", width=0.2, outlier.alpha = 0)+
+    coord_cartesian(xlim=c(1,3.2))+
+    stat_pvalue_manual(
+        data = plt.cfu.stat,
+        size = 5,
+        label = "p.adj.signif",
+        xmin = "group1", xmax = "group2",
+        y.position = "y.position")+
+    scale_y_continuous(limits = c(3.5,10.2), breaks=c(4,6,8,10))+
+    labs(y = plt_bac_density_lab,
+         x = "SynCom")+
+    theme_rs()+
+    theme(axis.text.x = element_text(hjust=0.5, vjust=1.5))
+
+
+plt3.b <- inner_join(dunntest_taxa_dpi, fold_taxa_dpi, by = c("taxa", "dpi", "synID")) %>% 
+    filter(group1 == "C") %>% 
+    ggplot(aes(x=synID, y=taxa))+
+    facet_wrap(~dpi, ncol=2, labeller = labeller(dpi=dpi.lab2))+
+    geom_tile(colour= "black", fill= "white", linewidth = 0.1)+
+    geom_point(aes(fill = log2FC, size = p_size), shape = 21)+
+    coord_fixed()+
+    scale_fill_gradientn(name = bquote(Log[2]~"FC"), colours = wes_palette("Zissou1")[c(1,2,3,5)], 
+                         values = c(0,0.55,1), limits=c(-8,4), breaks=seq(-8,4,4), na.value = 'grey90')+
+    scale_size_continuous(range = c(15,3), breaks = c(0.05, 0.5, 1), limits = c(0,1), 
+                          label = c("< 0.05", "0.5", "1.0"), name = expression(paste(italic("P"), "-adjusted")))+
+    scale_y_discrete(name="", labels = taxa.lab)+
+    labs(x = "")+
+    theme_rs()+
+    theme(panel.border = element_blank(),
+          axis.text.x = element_text(hjust=0.5, vjust=3),
+          axis.text.y = element_text(face="italic"),
+          strip.text = element_text(face="plain"))
+
+plt3.c <- inner_join(dunntest_strain_dpi, fold_strain_dpi, by = c("strain", "dpi", "synID")) %>% 
+    filter(group1 == "C") %>% 
+    ggplot(aes(x=synID, y=strain))+
+    facet_wrap(~dpi, ncol=2, labeller = labeller(dpi=dpi.lab2))+
+    geom_tile(colour= "black", fill= "white", linewidth = 0.1)+
+    geom_point(aes(fill = log2FC, size = p_size), shape = 21)+
+    coord_fixed()+
+    scale_fill_gradientn(name = bquote(Log[2]~"FC"), colours = wes_palette("Zissou1")[c(1,2,3,5)], 
+                         values = c(0,0.55,1), limits=c(-8,4), breaks=seq(-8,4,4), na.value = 'grey90')+
+    scale_size_continuous(range = c(15,3), breaks = c(0.05, 0.5, 1), limits = c(0,1),
+                          label = c("< 0.05", "0.5", "1.0"), name = expression(paste(italic("P"), "-adjusted")))+
+    scale_y_discrete(name="Focal strain", labels = sp.lab)+
+    scale_x_discrete(name="SynCom", labels = sp.lab)+
+    theme_rs()+
+    theme(panel.border = element_blank(),
+          axis.text.x = element_text(hjust=0.5, vjust=3),
+          strip.text = element_text(face="plain"))+
+    guides(size = "none", fill="none")
+```
+
+```{r label: figure_main_3, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere"}
+areas <- c(patchwork::area(1,1,3), patchwork::area(1,2,1), patchwork::area(2,2,3))
+wrap_elements(full = plt3.a) + plt3.b + plt3.c  + plot_annotation(tag_levels = "A") + plot_layout(design = areas, guides = "collect") & theme(legend.box.just = "center")
+```
 
 ```{r figure_sup_1_setup, include=FALSE}
 
