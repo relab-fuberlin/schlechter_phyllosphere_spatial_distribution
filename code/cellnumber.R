@@ -36,19 +36,20 @@ combined_data %>%
     write.csv(here('results', 'nfov.csv'), row.names = FALSE)
 
 # Cell coverage (number of cells per area)
-combined_data %>% 
+coverage <- combined_data %>% 
     mutate(cm2 = area) %>% 
-    group_by(exp, dpi, synID, comID, syncom, strain, rep) %>% 
+    group_by(exp, dpi, synID, comID, syncom, strain, rep, channel) %>% 
     summarise(cell = sum(n),
               total_area = sum(cm2),
               .groups = "drop") %>% 
     mutate(cell_area = cell/total_area,
-           logCell = log10(cell_area)) %>% 
-    write.csv(here('results', 'cell_density.csv'), row.names = FALSE)
+           logCell = log10(cell_area))
+
+write.csv(coverage, here('results', 'cell_density.csv'), row.names = FALSE)
 
 # Summary statistic of cell coverage
 coverage %>% 
-    group_by(dpi, synID, comID, syncom, strain) %>% 
+    group_by(dpi, synID, comID, syncom, strain, channel) %>% 
     summarise(mean = mean(logCell),
               sd = sd(logCell),
               cv = sd/mean*100,
