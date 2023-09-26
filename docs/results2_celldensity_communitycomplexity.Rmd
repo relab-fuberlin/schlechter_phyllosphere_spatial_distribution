@@ -28,12 +28,11 @@ set.seed(19900725)
 ```{r import_data, include=FALSE}
 data_cell <- read.csv(here("results", "cell_density.csv")) %>% 
     rename(sample = rep) %>% 
-    left_join(., read.csv(here("results", "cfu_data_processed.csv")), by=c("exp", "dpi", "synID", "comID", "syncom", "strain", "sample")) %>% 
-    na.omit %>% 
+    inner_join(., read.csv(here("results", "cfu_data_processed.csv")), by=c("exp", "dpi", "synID", "comID", "syncom", "strain", "sample", "channel")) %>% 
     mutate(dpi = factor(dpi),
            synID = factor(synID),
-           taxa = factor(taxa),
-           strain = factor(strain))
+           strain = factor(strain)) %>% 
+    na.omit
 ```
 
 ```{r}
@@ -155,7 +154,8 @@ plt3.a <- data_cell %>%
 
 
 plt3.b <- inner_join(dunntest_taxa, fold_taxa, by = c("taxa", "synID")) %>% 
-    filter(group1 == "C") %>% 
+    filter(group1 == "C") %>%
+    na.omit %>% 
     ggplot(aes(x=synID, y=taxa))+
     geom_tile(colour= "black", fill= "white", linewidth = 0.1)+
     geom_point(aes(fill = log2FC, size = p_size), shape = 21)+
