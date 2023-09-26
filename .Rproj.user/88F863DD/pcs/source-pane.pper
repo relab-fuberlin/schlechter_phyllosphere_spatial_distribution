@@ -1,8 +1,12 @@
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
     "activeTab": 0,
 =======
     "activeTab": 1,
 >>>>>>> 4b365569813c4b08bbf87a18309ab285da4daf25
+=======
+    "activeTab": -1,
+>>>>>>> 6811ad389021b438d096e914e54bc93bd167d215
     "activeTabSourceWindow0": 0
 }
