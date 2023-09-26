@@ -38,7 +38,7 @@ combined_data %>%
 # Cell coverage (number of cells per area)
 combined_data %>% 
     mutate(cm2 = area) %>% 
-    group_by(exp, dpi, synID, comID, syncom, strain, rep) %>% 
+    group_by(exp, dpi, synID, comID, syncom, strain, rep, channel) %>% 
     summarise(cell = sum(n),
               total_area = sum(cm2),
               .groups = "drop") %>% 
