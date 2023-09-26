@@ -27,20 +27,33 @@ set.seed(19900725)
 
 ```{r import_data, include=FALSE}
 data_cell <- read.csv(here("results", "cell_density.csv")) %>% 
+    rename(sample = rep) %>% 
+    left_join(., read.csv(here("results", "cfu_data_processed.csv")), by=c("exp", "dpi", "synID", "comID", "syncom", "strain", "sample")) %>% 
     na.omit %>% 
     mutate(dpi = factor(dpi),
            synID = factor(synID),
-           strain = factor(strain),
-           taxa = factor(case_when(
-               strain == "meL85" | strain == "meL92" | strain == "mr01" ~ "Methylobacterium",
-               strain == "smfr1" | strain == "spfa2" ~ "Sphingomonas")))
+           taxa = factor(taxa),
+           strain = factor(strain))
 ```
 
 ```{r}
 data_cell %>% head
 ```
 
-```{r}
+```{r correlation}
+# Correlation between bacterial densities determined by CFU or by cell counts
+data_cell %>% 
+    cor_test(
+        vars = c("logCell", "cfu_log"),
+        alternative = "greater",
+        method = "pearson",
+        conf.level = 0.95
+    )
+
+```
+
+
+```{r test_assumptions}
 linear_cell = lm(logCell ~ synID + dpi + taxa, data_cell)
 
 # Shapiro-Wilk test for normality
