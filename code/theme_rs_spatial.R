@@ -1,16 +1,21 @@
 #     Ggplot theme
 theme_rs <- function() {
-  theme_bw(base_size = 12) %+replace%
+  theme_bw() %+replace%
     theme(
-      strip.background = element_rect(fill = "#f2f2f2", color = "gray", size = 0.25),
-      axis.ticks = element_line(size = 0.2),
-      axis.ticks.length=unit(.25, "cm"),
+      strip.background = element_blank(),
+      strip.placement = "outside",
+      strip.text = element_text(size=12, vjust = 1, face="italic"),
       legend.box.spacing = unit(0.1, "line"),
-      legend.key.size = unit(0.1, "cm"),
+      legend.key.size = unit(0.5, "cm"),
+      legend.box.just = "center",
       panel.background = element_blank(),
-      panel.border = element_rect(size = 0.25, fill = NA, color = "black"),
-      panel.spacing = grid::unit(0.5, "line"),
-      panel.grid.major = element_line(size=0.25, color = "#f2f2f2"),
-      panel.grid.minor = element_blank()
+      panel.border = element_rect(linewidth = 1, fill = NA, color = "black"),
+      panel.spacing = grid::unit(1.5, "line"),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      text = element_text(color = "black"),
+      axis.ticks = element_blank(),
+      axis.title = element_text(size = 14),
+      axis.text = element_text(size = 12)
     )
 }
