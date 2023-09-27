@@ -8,7 +8,7 @@ data %>%
         aggregate = case_when(obs > hi ~ 1, TRUE ~ 0),
         regular = case_when(obs < lo ~ 1, TRUE ~ 0),
         random = case_when(obs < hi & obs > lo ~ 1, TRUE ~ 0)) %>% 
-    group_by(strain, dpi, r) %>% 
+    group_by(syncom, strain, dpi, r) %>% 
     summarise(
         aggregate = sum(aggregate),
         regular = sum(regular),
@@ -23,8 +23,8 @@ data %>%
                  names_to = "type", 
                  values_to = "fraction", 
                  values_drop_na = TRUE) %>% 
-    select(strain, dpi, r, type, fraction) %>% 
+    select(syncom, strain, dpi, r, type, fraction) %>% 
     mutate(strain = factor(strain),
            dpi = factor(dpi),
-           type = factor(dpi, levels = c('regular_fraction', 'random_fraction', 'aggregate_fraction'))) %>% 
+           type = factor(type, levels = c('regular_fraction', 'random_fraction', 'aggregate_fraction'))) %>% 
     write.csv(here('results', 'stat_K_fractions.csv'))
