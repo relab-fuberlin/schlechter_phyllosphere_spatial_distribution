@@ -49,3 +49,24 @@ shapiro.test(rstandard(lmauc))
 ncvTest(lmauc)
 
 
+## synID
+auc_fold_change %>% 
+    filter(type == "aggregate_fraction") %>% 
+    group_by(dpi) %>% 
+    wilcox_test(log2FC ~ synID, p.adjust.method = "holm")
+
+## dpi
+auc_fold_change %>% 
+    filter(type == "aggregate_fraction" & log2FC != -Inf) %>% 
+    wilcox_test(log2FC ~ dpi, detailed = TRUE)
+
+## strain
+auc_fold_change %>% 
+    filter(type == "aggregate_fraction") %>% 
+    group_by(dpi) %>% 
+    kruskal_test(log2FC ~ strain)
+
+auc_fold_change %>% 
+    filter(type == "aggregate_fraction") %>% 
+    group_by(dpi) %>% 
+    dunn_test(log2FC ~ strain, p.adjust.method = "holm")
