@@ -1,34 +1,23 @@
-read.csv("results/cfu_data_processed.csv") %>% 
+read.csv(here('results', 'cfu_data_processed.csv')) %>% 
     na.omit %>% 
     ggplot(aes(synID, cfu_log, fill=synID))+
-    
     stat_eye(
         side="right",
         adjust = 1,
         justification = -0.3,
         .width = 0,
         scale = 0.5,
-        point_colour = NA
-    )+
-    
-    geom_jitter(width = 0.1,
-                alpha = 0.1)+
-    
-    geom_boxplot(
-        fill="white",
-        width=0.2,
-        outlier.alpha = 0
-    )+
-    
+        point_colour = NA)+
+    geom_jitter(width = 0.1, alpha = 0.1)+
+    geom_boxplot(fill="white", width=0.2, outlier.alpha = 0)+
     coord_cartesian(xlim=c(1,3.2))+
-    
     stat_compare_means(
         aes(label = paste0(
-            "Anova ~italic(p)",
+            "Wilcoxon ~italic(p)",
             scales::label_pvalue(accuracy = 0.05)(..p..)
         )),
         parse = TRUE,
-        method = "anova", 
+        method = "wilcox.test", 
         label.y = 10.8, 
         label.x = 2.8,
         size = 5)+

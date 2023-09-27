@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Data processing CFU data
-source("code/libraries_syncom.R")
+source(here('code', 'libraries_syncom.R'))
 
 cfu_data = read.csv(here("data/cfu.csv")) %>% 
     mutate(cfu_log = log10(cfu),
