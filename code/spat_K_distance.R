@@ -7,17 +7,21 @@ ecdf_func <- function(data) {
 }
 
 #   Open file
-data <- readRDS(here('results', 'stat_K_inhom_table.rds'))
-data %>% head
+data <- readRDS(here('results', 'stat_K_inhom_table.rds')) %>% 
+    mutate(taxa = case_when(
+        strain == "meL85" ~ "Methylobacterium",
+        strain == "meL92" ~ "Methylobacterium",
+        strain == "mr01" ~ "Methylobacterium",
+        TRUE ~ "Sphingomonas"))
 
 ## Empirical cumulative distribution
 ecdf_all <- data %>% 
     filter(obs > hi) %>% 
-    group_by(dpi, syncom, strain, exp, rep) %>% 
+    group_by(dpi, syncom, taxa, strain, exp, rep) %>% 
     mutate(ecdfFun = ecdf_func(r)) %>% 
     filter(ecdfFun > 0.95) %>% 
     summarise(r_min = min(r), .groups="drop") %>% 
-    group_by(dpi, syncom, strain) %>% 
+    group_by(dpi, syncom, taxa, strain) %>% 
     summarise(r = mean(r_min), .groups="drop") %>% 
     separate(col="syncom", into=c("synID", "com"), sep="\\.", remove = FALSE)
     
@@ -41,7 +45,6 @@ r_fold_s3 <- r_fold %>%
     filter(synID=="S3") %>% 
     pivot_wider(id_cols = c(strain, dpi), names_from=syncom, values_from=c(r.inter,log2FC)) %>% 
     arrange(strain)
-
 r_fold_back <- cbind(r_fold_s2, r_fold_s3[,c(-1:-2)]) %>% 
     pivot_longer(cols=-c(strain,dpi), names_to = c("type", "strain2"), names_sep="_", ) %>% 
     pivot_wider(id_cols = c(strain, dpi, strain2), names_from = type, values_from = value) %>% 
@@ -66,10 +69,24 @@ ecdf_all %>%
     scale_y_continuous(limits = c(6,16), breaks = seq(8,16,4), expand = c(0,0))+
     theme_classic()
 
+#dpi
+ecdf_all %>% 
+    wilcox_test(r ~ dpi)
+
+#syncom
+ecdf_all %>% 
+    group_by(dpi) %>% 
+    dunn_test(r ~ synID, p.adjust.method='holm')
+
+#taxa
+ecdf_all %>% 
+    group_by(dpi) %>% 
+    wilcox_test(r ~ taxa)
+
+#strain
 ecdf_all %>% 
     kruskal_test(r ~ strain)
 
 ecdf_all %>% 
     group_by(dpi) %>% 
-    dunn_test(r ~ synID, p.adjust.method='holm')
-
+    dunn_test(r ~ strain, p.adjust.method='holm')
