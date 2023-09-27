@@ -13,8 +13,8 @@ names(syn.lab) <- c("C", "S2", "S3")
 dpi.lab = c("7", "14")
 names(dpi.lab) <- c("07dpi", "14dpi")
 
-pattern.lab = c("Aggregated", "CSR", "Regular")
-names(pattern.lab) <- c("f_agg", "f_csr", "f_seg")
+pattern.lab = c("Aggregated", "Random", "Regular")
+names(pattern.lab) <- c("aggregate_fraction", "random_fraction", "regular_fraction")
 
 pair.lab = c("MeL85-MeL92", "MeL85-Mr0-1", "MeL92-Mr0-1", "SmFR1-SpFA2",
               "MeL85-SmFR1", "MeL85-SpFA2", "MeL92-SmFR1", "MeL92-SpFA2", "Mr0-1-SmFR1", "Mr0-1-SpFA2")
