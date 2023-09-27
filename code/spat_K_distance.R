@@ -65,8 +65,8 @@ r_fold_back %>%
 ecdf_all %>% 
     ggplot(aes(x=strain, y=r))+
     geom_jitter(width=0.1)+
-    geom_boxplot(alpha = 0.5, width=0.2)+
-    scale_y_continuous(limits = c(6,16), breaks = seq(8,16,4), expand = c(0,0))+
+    geom_boxplot(alpha = 0.5, width=0.2, outlier.alpha = 0)+
+    scale_y_continuous(limits = c(7,16), breaks = seq(8,16,4), expand = c(0,0))+
     theme_classic()
 
 #dpi
