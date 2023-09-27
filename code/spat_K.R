@@ -20,13 +20,16 @@ saveRDS(K_inhom, here('results', 'stat_K_inhom.rds'))
 datalist = list()
 for (i in 1:nrow(H)){
     datalist[[i]] <- data.frame(
-        syncom = summary_data$syncom[i],
-        dpi = summary_data$dpi[i],
-        rep = summary_data$img[i],
+        syncom = H_summary$syncom[i],
+        dpi = H_summary$dpi[i],
+        exp = H_summary$exp[i],
+        rep = H_summary$img[i],
+        strain = H_summary$strain[i],
         r = K_inhom[[i]]$r,
         obs = K_inhom[[i]]$obs,
         lo = K_inhom[[i]]$lo,
         hi = K_inhom[[i]]$hi)
 }
 K_df = data.table::rbindlist(datalist) %>% na.omit
+saveRDS(K_df, here('results', 'stat_K_inhom_table.rds'))
 
