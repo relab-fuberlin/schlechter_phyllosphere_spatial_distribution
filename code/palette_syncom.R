@@ -12,6 +12,8 @@ names(syn.lab) <- c("C", "S2", "S3")
 
 dpi.lab = c("7", "14")
 names(dpi.lab) <- c("07dpi", "14dpi")
+dpi.lab2 = c("7 dpi", "14 dpi")
+names(dpi.lab2) <- c("07dpi", "14dpi")
 
 pattern.lab = c("Aggregated", "Random", "Regular")
 names(pattern.lab) <- c("aggregate_fraction", "random_fraction", "regular_fraction")
@@ -22,6 +24,7 @@ names(pair.lab) = c('meth85_meth92', 'meth85_mr01', 'meth92_mr01','smfr1_spfa2',
                      'meth85_smfr1', 'meth85_spfa2', 'meth92_smfr1', 'meth92_spfa2','mr01_smfr1','mr01_spfa2')
 
 plt_bac_density_lab = bquote('Bacterial density ['*log[10]~ "CFU g" ~ FW^-1 *"]")
+plt_bac_cell_density_lab = bquote('Bacterial cell density ['*log[10]~ "cell" ~ cm^-2 *"]")
 plt_days_lab = "Days post-inoculation [dpi]"
 
 ##    PALETTES

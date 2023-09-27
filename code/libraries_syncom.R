@@ -7,6 +7,7 @@
 # tidy data
 library(tidyverse)
 library(reshape2)
+library(broom)
 
 # plots
 library(patchwork)
