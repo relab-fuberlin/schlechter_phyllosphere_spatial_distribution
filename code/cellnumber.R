@@ -23,27 +23,24 @@ combined_data <- data %>%
 
 # Number of cells per field of views
 combined_data %>% 
-    pivot_wider(id_cols = c(exp, dpi, synID, comID, syncom, img), 
-                names_from = channel, values_from = n, values_fill = 0, values_fn = mean) %>% 
-    group_by(exp, dpi, synID, comID, syncom) %>% 
+    pivot_wider(id_cols = c(exp, dpi, synID, comID, syncom, img, rep), 
+                names_from = channel, values_from = n, values_fill = 0) %>% 
+    group_by(exp, dpi, synID, comID, syncom, rep) %>% 
     summarise(nFOV = max(img),
-              nC0 = sum(C0),
-              nC1 = sum(C1),
-              nC2 = sum(C2),
-              .groups = "drop") %>% 
-    mutate(sumCell = nC0 + nC1 + nC2,
-           avCell = sumCell/nFOV) %>% 
+              sumCell = sum(C0) + sum(C1) + sum(C2),
+              avCell = sumCell/nFOV,
+              .groups = "drop")  %>% 
     write.csv(here('results', 'nfov.csv'), row.names = FALSE)
 
 # Cell coverage (number of cells per area)
 coverage <- combined_data %>% 
-    mutate(cm2 = area) %>% 
-    group_by(exp, dpi, synID, comID, syncom, strain, rep, channel) %>% 
-    summarise(cell = sum(n),
-              total_area = sum(cm2),
-              .groups = "drop") %>% 
-    mutate(cell_area = cell/total_area,
-           logCell = log10(cell_area))
+    group_by(exp, dpi, synID, comID, syncom, strain, rep, channel) %>%
+    summarise(nFOV = max(img),
+              cell = sum(n),
+              cm2 = area * nFOV,
+              cell_density = cell/cm2,
+              logCell = log10(cell_density),
+              .groups = "drop")
 
 write.csv(coverage, here('results', 'cell_density.csv'), row.names = FALSE)
 

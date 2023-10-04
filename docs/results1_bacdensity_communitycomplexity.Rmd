@@ -197,7 +197,7 @@ plt3.c <- inner_join(dunntest_strain_dpi, fold_strain_dpi, by = c("strain", "dpi
     guides(size = "none", fill="none")
 ```
 
-```{r label: figure_main_3, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere", dev = c("png", "tiff"), fig.dim=c(7,5)}
+```{r figure_main_3, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere", dev = c("png", "tiff"), fig.dim=c(7,5)}
 areas <- c(patchwork::area(1,1,3), patchwork::area(1,2,1), patchwork::area(2,2,3))
 wrap_elements(full = plt3.a) + plt3.b + plt3.c  + plot_annotation(tag_levels = "A") + plot_layout(design = areas, guides = "collect") & theme(legend.box.just = "center")
 ```
