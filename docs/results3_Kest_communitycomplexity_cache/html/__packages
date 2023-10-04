@@ -15,6 +15,7 @@ RColorBrewer
 ggpubr
 wesanderson
 ggdist
+ggh4x
 carData
 car
 spatstat.data
