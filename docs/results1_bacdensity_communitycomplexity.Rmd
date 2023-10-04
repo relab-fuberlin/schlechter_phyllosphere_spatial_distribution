@@ -203,7 +203,6 @@ wrap_elements(full = plt3.a) + plt3.b + plt3.c  + plot_annotation(tag_levels = "
 ```
 
 ```{r figure_sup_1_setup, include=FALSE}
-
 dunntest_syncom <- dun_func1(data_cfu, "cfu_log", c("strain", "dpi"), "syncom") %>% 
     separate(group1, into=c('synID', 'com')) %>% 
     rename(syncom = group2) %>% 
