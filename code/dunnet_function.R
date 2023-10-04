@@ -14,7 +14,7 @@ dun_func1 <- function(dataframe, cell_log, group_by_variable, explanatory_variab
     formula_str <- paste(colnames(dataframe)[col_index_cell], "~", colnames(dataframe)[col_index])
     
     result <- dataframe %>% 
-        group_by( !!!syms(group_by_variable)) %>% 
+        group_by(!!!syms(group_by_variable)) %>% 
         dunn_test(as.formula(formula_str), p.adjust.method = 'holm', detailed = TRUE) %>% 
         select(!!!syms(group_by_variable), group1, group2, estimate, statistic, p.adj) %>% 
         group_by(!!!syms(group_by_variable)) %>% 
