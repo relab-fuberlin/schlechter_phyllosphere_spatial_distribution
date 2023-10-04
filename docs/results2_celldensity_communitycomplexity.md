@@ -6,6 +6,8 @@ output:
     df_print: paged
     keep_md: yes
   pdf_document: default
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -31,77 +33,76 @@ data_cell %>% head
 data_cell %>% 
     cor_test(
         vars = c("logCell", "cfu_log"),
-        alternative = "greater",
         method = "pearson",
-        conf.level = 0.95
-    )
+        conf.level = 0.95)
 ```
 
 <div data-pagedtable="false">
   <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["var1"],"name":[1],"type":["chr"],"align":["left"]},{"label":["var2"],"name":[2],"type":["chr"],"align":["left"]},{"label":["cor"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["statistic"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["p"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["conf.low"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["conf.high"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["method"],"name":[8],"type":["chr"],"align":["left"]}],"data":[{"1":"logCell","2":"cfu_log","3":"0.4","4":"13","5":"1.3e-35","6":"0.36","7":"1","8":"Pearson"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["var1"],"name":[1],"type":["chr"],"align":["left"]},{"label":["var2"],"name":[2],"type":["chr"],"align":["left"]},{"label":["cor"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["statistic"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["p"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["conf.low"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["conf.high"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["method"],"name":[8],"type":["chr"],"align":["left"]}],"data":[{"1":"logCell","2":"cfu_log","3":"0.37","4":"12","5":"9.2e-29","6":"0.31","7":"0.43","8":"Pearson"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 
 
 
 ```r
-linear_cell = lm(logCell ~ synID + dpi + taxa, data_cell)
+linear_cell <-  lm(logCell ~ synID + dpi + taxa, data_cell)
 
 # Shapiro-Wilk test for normality
-cell_normality = shapiro.test(rstandard(linear_cell))
+shapiro.test(rstandard(linear_cell))
+```
 
+```
+## 
+## 	Shapiro-Wilk normality test
+## 
+## data:  rstandard(linear_cell)
+## W = 0.9, p-value <2e-16
+```
+
+```r
 # Breusch-Pagan test for homogeneity of variances
-cell_homoskedasticity = ncvTest(linear_cell)
+ncvTest(linear_cell)
+```
+
+```
+## Non-constant Variance Score Test 
+## Variance formula: ~ fitted.values 
+## Chisquare = 102, Df = 1, p = <2e-16
 ```
 
 
 ```r
 # Kruskal-Wallis test and effect size for community complexity (synID)
-kw_synID = kruskal.test(logCell ~ synID, data_cell) %>% tidy %>% 
-    mutate(p_label = case_when(p.value < 0.05 ~ "< 0.05", TRUE ~ as.character(p.value)))
-keff_synID = kruskal_effsize(formula = logCell ~ synID, data = data_cell, ci=TRUE, nboot=100)
+kw_synID <- data_cell %>%
+    group_by(taxa) %>% 
+    kruskal_test(logCell ~ synID) %>% 
+    mutate(p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
+keff_synID <- data_cell %>% 
+    group_by(taxa) %>% 
+    kruskal_effsize(logCell ~ synID, ci=TRUE, nboot=100)
 
 # Dunn's Test
-dunn_synID = dunn_test(logCell ~ synID, p.adjust.method = "holm", data=data_cell) %>% tibble %>% 
+dunn_synID <- data_cell %>% 
+    group_by(taxa) %>% 
+    dunn_test(logCell ~ synID, p.adjust.method = "holm") %>% 
     mutate(p_label = case_when(p.adj < 0.05 ~ "< 0.05", TRUE ~ as.character(p.adj)))
-
-# Fold change of population density by SynCom complexity (synID)
-fc_cell_synID = data_cell %>% 
-    group_by(synID) %>% 
-    summarise(median_cell = median(cell_area)) %>% 
-    mutate(FC = median_cell/median_cell[1],
-           logFC = log2(FC))
 ```
 
 
 ```r
 # Wilcoxon test and effect size for sampling time (dpi)
-w_dpi = wilcox.test(formula = logCell ~ dpi, data = data_cell) %>% tidy %>% 
-    mutate(p_label = case_when(p.value < 0.05 ~ "< 0.05", TRUE ~ as.character(p.value)))
+w_dpi = data_cell %>% 
+    wilcox_test(formula = logCell ~ dpi)
 
 # Fold change of population density by time of sampling (dpi)
 fc_cell_dpi = data_cell %>% 
     group_by(dpi) %>% 
-    summarise(median_cell = median(cell_area)) %>% 
+    summarise(median_cell = median(cell_density)) %>% 
     mutate(FC = median_cell/median_cell[1],
            logFC = log2(FC))
 ```
 
-
-```r
-# Wilcoxon test and effect size for bacterial group (taxa)
-w_taxa = wilcox.test(formula = logCell ~ taxa, data = data_cell) %>% tidy %>% 
-    mutate(p_label = case_when(p.value < 0.05 ~ "< 0.05", TRUE ~ as.character(p.value)))
-weff_taxa = wilcox_effsize(formula = logCell ~ taxa, data = data_cell, ci=TRUE, nboot=100)
-
-# Fold change of population density by bacterial group (taxa)
-fc_cell_taxa = data_cell %>% 
-    group_by(taxa) %>% 
-    summarise(median_cell = median(cell_area)) %>% 
-    mutate(FC = median_cell/median_cell[1],
-           logFC = log2(FC))
-```
 
 
 
@@ -110,10 +111,12 @@ fc_cell_taxa = data_cell %>%
 
 ```r
 areas <- c(patchwork::area(1,1,3), patchwork::area(1,2,1), patchwork::area(2,2,3))
-wrap_elements(full = plt3.a) + plt3.b + plt3.c  + plot_annotation(tag_levels = "A") + plot_layout(design = areas, guides = "collect") & theme(legend.box.just = "center")
+wrap_elements(full = plt3.a) + plt3.b + plt3.c  + 
+    plot_annotation(tag_levels = "A") + 
+    plot_layout(guides = "collect", design = areas) & theme(legend.box.just = "center")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="results2_celldensity_communitycomplexity_files/figure-html/figure_main_5-1.png" alt="Bacterial cell density in the arabidopsis phyllosphere"  />
+<img src="results2_celldensity_communitycomplexity_files/figure-html/figure_main_5-1.png" alt="Bacterial cell density in the arabidopsis phyllosphere" id="fig-figure-main-5-1" />
 <p class="caption">Bacterial cell density in the arabidopsis phyllosphere</p>
 </div>
