@@ -2,10 +2,12 @@
 title: 'Spatial distribution - Section 3'
 author: "Rudolf Schlechter"
 output: 
+    pdf_document: default
     html_document:
         df_print: paged
         keep_md: yes
-    pdf_document: default
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -20,6 +22,7 @@ library(rstatix)
 
 #Data
 source(here('code', 'auc_fractions.R'))
+auc_aggregation <- auc_fold_change %>% filter(type == "aggregate_fraction")
 
 set.seed(19900725)
 ```
@@ -29,7 +32,7 @@ set.seed(19900725)
 ```{r}
 fractions %>% head
 ```
-To evaluate the effect of community context on spatial distributions within bacterial populations (intraspecific interactions), we first determined relative frequencies of a spatial pattern (aggregation, random, regular) based on the K(r) estimates for every condition. We then determined the area under the curve of the aggregation fraction of frequency plots and calculated the fractional change of aggregation compared to the near-isogenic control condition, C (Fig 6a).
+Community context was expected to influence the spatial distribution patterns (aggregation, randomness, regularity) within bacterial populations in the phyllosphere. To evaluate this, we first determined relative frequencies of a spatial pattern based on K(r) for every strain in each community context. We then determined the area under the curve of each spatial pattern and calculated the fractional change compared to the near-isogenic control condition, C (Fig 6a).
 
 ```{r}
 ## Taxa
@@ -51,7 +54,182 @@ wilcox_one_strain = auc_fold_change %>%
         p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
 ```
 
-```{r plot_sup}
+
+```{r analysis_type}
+## Summary
+auc_fold_change %>% 
+    ggplot(aes(sample = fractional_change, color = type))+
+    geom_qq()
+
+summary_type <- auc_fold_change %>% 
+    group_by(type) %>% 
+    summarise(median = median(fractional_change),
+              q1 = format(round(quantile(fractional_change, 0.25), 2), nsmall = 2),
+              q3 = format(round(quantile(fractional_change, 0.75), 2), nsmall = 2),
+              IQR = paste0(q1,"-(",q3,")", sep=''),
+              percentage = abs(100*median))
+
+## Kruskal-Wallis
+kw_type <- auc_fold_change %>% 
+    kruskal_test(fractional_change ~ type) %>% 
+    mutate(
+        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
+        p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
+
+kw_eff_type <- auc_fold_change %>% 
+    kruskal_effsize(fractional_change ~ type, ci=TRUE, nboot=100)
+
+## One-sample Wilcoxon test
+w1_type <-  auc_fold_change %>% 
+    group_by(type) %>% 
+    wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
+    select(type, estimate, statistic, p) %>% 
+    mutate(
+        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
+        p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
+
+```
+
+Our initial analysis showed that spatial distribution patterns within populations differed from their respective controls and were also different between them (Kruskal-Wallis, *H*(`r kw_type$df`) = `r kw_type$statistic`, *p* `r kw_type$p_label`). Generally, populations decreased in `r summary_type$percentage[summary_type$type=="aggregate_fraction"]`% and `r summary_type$percentage[summary_type$type=="regular_fraction"]`% in aggregation and regularity, respectively, and consequently, random distributions increased in `r summary_type$percentage[summary_type$type=="random_fraction"]`%.
+
+```{r analysis_dpi}
+## Summary
+auc_fold_change %>% 
+    ggplot(aes(sample = fractional_change, color = dpi))+
+    geom_qq()    
+
+summary_dpi <- auc_fold_change %>% 
+    group_by(dpi) %>% 
+    summarise(median = median(fractional_change),
+              q1 = format(round(quantile(fractional_change, 0.25), 2), nsmall = 2),
+              q3 = format(round(quantile(fractional_change, 0.75), 2), nsmall = 2),
+              IQR = paste0(q1,"-(",q3,")", sep=''),
+              percentage = abs(100*median))
+
+## One sample Wilcoxon test
+w1_dpi = auc_fold_change %>% 
+    group_by(dpi, type) %>% 
+    wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
+    select(dpi, type, estimate, statistic, p) %>% 
+    mutate(
+        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
+        p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
+
+## Two samples Wilcoxon test
+w2_dpi <- auc_fold_change %>% 
+    group_by(type) %>% 
+    wilcox_test(fractional_change ~ dpi, p.adjust.method = "holm", detailed = TRUE)
+```
+
+The observed distribution patterns were consistent between time points: aggregation and regularity within populations decreased, while randomness increased from 7 to 14 dpi. Considering that aggregation and regularity were not statistically different as they follow a consistent pattern, and randomness is a factor that would be related to neutral rather than deterministic processes, we continued our analysis focused on the changes in aggregation pattern within populations and its influencing factors.
+
+```{r analysis_taxa_strain}
+## Summary
+auc_aggregation %>% 
+    ggplot(aes(sample = fractional_change, color = taxa))+
+    geom_qq()    
+
+summary_taxa <- auc_aggregation %>% 
+    group_by(taxa, dpi) %>% 
+    summarise(median = median(fractional_change),
+              q1 = format(round(quantile(fractional_change, 0.25), 2), nsmall = 2),
+              q3 = format(round(quantile(fractional_change, 0.75), 2), nsmall = 2),
+              IQR = paste0(q1,"-(",q3,")", sep=''),
+              percentage = abs(100*median),
+              .groups = "drop")
+
+summary_strain <- auc_aggregation %>% 
+    filter(dpi == "07dpi") %>% 
+    group_by(strain) %>% 
+    summarise(median = median(fractional_change),
+              q1 = format(round(quantile(fractional_change, 0.25), 2), nsmall = 2),
+              q3 = format(round(quantile(fractional_change, 0.75), 2), nsmall = 2),
+              IQR = paste0(q1,"-(",q3,")", sep=''),
+              percentage = abs(100*median),
+              .groups = "drop")
+
+## Two samples Wilcoxon test for taxa (Methylobacterium vs Sphingomonas)
+w2_taxa <- auc_aggregation %>% 
+    group_by(dpi) %>% 
+    wilcox_test(fractional_change ~ taxa, p.adjust.method = "holm", detailed = TRUE)
+
+## Kruskal-Wallis for strains
+auc_aggregation %>% 
+    group_by(dpi) %>% 
+    kruskal_test(fractional_change ~ strain)
+
+auc_aggregation %>% 
+    filter(dpi == "07dpi") %>% 
+    dunn_test(fractional_change ~ strain, p.adjust.method = "holm")
+
+```
+
+Comparing the aggregation pattern between taxa, we observed that *Methylobacterium* and *Sphingomonas* differ in the magnitude of their change in aggregation, but only at 7 dpi (Wilcoxon, *W* = `r w2_taxa$statistic[w2_taxa$dpi=="07dpi"]`, *p* = `r w2_taxa$p[w2_taxa$dpi=="07dpi"]`). While both taxa decreased their self-aggregation pattern. *Methylobacterium* showed the largest decrease in aggregation (`r summary_taxa$percentage[summary_taxa$taxa=="Methylobacterium"&summary_taxa$dpi=="07dpi"]`%), being MeL85 and MeL92 the most affected (`r summary_strain$percentage[summary_strain$strain=="meL85"]` and `r summary_strain$percentage[summary_strain$strain=="meL92"]`%, respectively). By contrast, the sphingomonads SmFR1 and SpFA2 were the least affected, with a `r summary_strain$percentage[summary_strain$strain=="smfr1"]` and `r summary_strain$percentage[summary_strain$strain=="spfa2"]`% decrease in self-aggregation, respectively.
+
+```{r analysis_synID_strain}
+##  Summary
+summary_synID <- auc_aggregation %>% 
+    group_by(dpi, synID) %>% 
+    summarise(median = median(fractional_change),
+              q1 = format(round(quantile(fractional_change, 0.25), 2), nsmall = 2),
+              q3 = format(round(quantile(fractional_change, 0.75), 2), nsmall = 2),
+              IQR = paste0(q1,"-(",q3,")", sep=''),
+              percentage = abs(100*median),
+              .groups = "drop")
+
+summary_synID_strain <- auc_aggregation %>% 
+    filter(dpi == "07dpi") %>% 
+    group_by(synID, strain) %>% 
+    summarise(median = median(fractional_change),
+              q1 = format(round(quantile(fractional_change, 0.25), 2), nsmall = 2),
+              q3 = format(round(quantile(fractional_change, 0.75), 2), nsmall = 2),
+              IQR = paste0(q1,"-(",q3,")", sep=''),
+              percentage = abs(100*median),
+              .groups = "drop")
+
+## Two samples Wilcoxon test for SynCom ID (S2 vs S3)
+w2_synID <- auc_aggregation %>% 
+    group_by(dpi) %>% 
+    wilcox_test(fractional_change ~ synID, p.adjust.method = "holm")
+
+##  Dunn test for aggregation patterns of each strain at 7 dpi
+d_synID_strain <- auc_aggregation %>% 
+    filter(dpi == "07dpi") %>% 
+    group_by(synID) %>% 
+    dunn_test(fractional_change ~ strain, p.adjust.method = "holm") %>% 
+    filter(p.adj < 0.05)
+
+```
+
+Lastly, we evaluated the effect of community complexity in the changes in aggregation pattern of each population. We observed that populations belonging to S2 had a different aggregation pattern to those in S3. This difference was statistically significant only at 7 dpi (Wilcoxon, *W* = `r w2_synID$statistic[w2_synID$dpi=="07dpi"]`, *p* = `r w2_synID$p[w2_synID$dpi=="07dpi"]`). Consequently, we focused our analysis at this particular sampling time, which showed that differences in aggregation patterns were more pronounced in S3 than in S2. This was reflected in a `r summary_synID$percentage[summary_synID$dpi=="07dpi"&summary_synID$synID=="S3"]`% decrease in self-aggregation in bacterial populations in S3, and only a `r summary_synID$percentage[summary_synID$dpi=="07dpi"&summary_synID$synID=="S2"]`% decrease in S2. Particularly, MeL85 and MeL92 decreased in `r summary_synID_strain$percentage[summary_synID_strain$synID=="S3"&summary_synID_strain$strain=="meL85"]`% and `r summary_synID_strain$percentage[summary_synID_strain$synID=="S3"&summary_synID_strain$strain=="meL92"]`, respectively, and SmFR1 only with a `r summary_synID_strain$percentage[summary_synID_strain$synID=="S3"&summary_synID_strain$strain=="smfr1"]`% decrease. Consequently, MeL82 and MeL92 were statistically different to SmFR1 at S3.
+
+The results of our analysis indicated that bacterial taxa differentially change their spatial distribution patterns in response to community complexity. These changes represented a decrease in self-aggregation and self-regularity, and an increase in their random distribution, particularly for *Methylobacterium* at 7 dpi. Consistent with our results at the CFU-level, *Methylobacterium* were more susceptible than *Sphingomonas*, especially for MeL85 and MeL92 being the most affected, and SmFR1 the most resilient. 
+
+
+```{r}
+auc_fold_change %>% 
+    ggplot(aes(syncom, strain))+
+    facet_grid(dpi~type)+
+    geom_tile(colour='black', fill='white')+
+    geom_point(aes(fill=fractional_change), shape = 21, size = 6)+
+    scale_fill_gradientn(colours = wes_palette("Zissou1")[c(1,3,5,5)], values = c(0,0.35,1))+
+    coord_fixed()
+
+auc_fold_change %>% 
+    ggplot(aes(auc.inter))+
+    geom_histogram()
+
+lmauc = lm(fractional_change ~ synID + dpi + type + strain, data = auc_fold_change)
+shapiro.test(rstandard(lmauc))
+ncvTest(lmauc)
+
+
+```
+
+## Plots
+
+
+```{r plot1}
 wilcox_one_taxa %>% 
     filter(type == "aggregate_fraction") %>% 
     ggplot(aes(synID, taxa))+
@@ -94,58 +272,6 @@ wilcox_one_strain %>%
     
 ```
 
-
-We first evaluated whether the spatial pattern of a population in a community was different from its near-isogenic control (C), using a one-sample Wilcoxon test. The null hypothesis was that there is no change of a spatial pattern within a population in S2 or S3. On average, we observed a 23.9% increase in aggregation of Methylobacterium strains (t17 = 6.58, p < 0.05) at 14 dpi in S3 (Table SX). This increase was present in every Methylobacterium strain (Fig. 6b, MeL85 = +28.6%; MeL92 = +16.6%; Mr0-1 = +26.6%). Within the sphingomonads, SmFR1 decreased its aggregation pattern by 11.6% at 7 dpi in S3 communities (t5 = -5.03, p < 0.05), while SpFA2 remained unchanged (Fig 6b). 
-
-We defined the maximal intraspecific aggregation distances of a population as the maximal distance in which K(r) is higher than the upper limit of the estimator Kinhom(r) envelope, which indicates spatial aggregation (Fig 2b, Fig 6a). We determined the intraspecific aggregation distances for each interaction until they reached the maximal aggregation distance using the empirical cumulative distribution function (Fig. 6a), in which 95% of the aggregation was observed up to a given distance. We observed differences in intraspecific aggregation distances between strains: MeL85, MeL92, and SpFA2 showed the largest aggregation ranges of, in a few cases, up to 35 μm, while Mr0-1 and SmFR1 showed the shorter aggregation ranges of 0–15.5 µm and 0–18 μm, respectively (Fig. 6c). These ranges were not explained by the treatments or sampling points, but only by strain differences (F4,81 = 6.53, p < 0.05).
-
-
-```{r}
-auc_fold_change %>% 
-    ggplot(aes(syncom, strain))+
-    facet_grid(dpi~type)+
-    geom_tile(colour='black', fill='white')+
-    geom_point(aes(fill=fractional_change), shape = 21, size = 6)+
-    scale_fill_gradientn(colours = wes_palette("Zissou1")[c(1,3,5,5)], values = c(0,0.35,1))+
-    coord_fixed()
-
-auc_fold_change %>% 
-    ggplot(aes(dpi, fractional_change))+
-    facet_grid(type~strain)+
-    geom_point()
-
-auc_fold_change %>% 
-    ggplot(aes(auc.inter))+
-    geom_histogram()
-
-lmauc = lm(fractional_change ~ synID + dpi + type + strain, data = auc_fold_change)
-shapiro.test(rstandard(lmauc))
-ncvTest(lmauc)
-
-
-## synID
-auc_fold_change %>% 
-    filter(type == "aggregate_fraction") %>% 
-    group_by(dpi) %>% 
-    wilcox_test(fractional_change ~ synID, p.adjust.method = "holm")
-
-## dpi
-auc_fold_change %>% 
-    filter(type == "aggregate_fraction") %>% 
-    wilcox_test(fractional_change ~ dpi, detailed = TRUE)
-
-## strain
-auc_fold_change %>% 
-    filter(type == "aggregate_fraction") %>% 
-    group_by(dpi) %>% 
-    kruskal_test(fractional_change ~ strain)
-
-auc_fold_change %>% 
-    filter(type == "aggregate_fraction") %>% 
-    group_by(dpi) %>% 
-    dunn_test(fractional_change ~ strain, p.adjust.method = "holm")
-
-```
 
 ```{r plot_sup}
 auc_fold_change %>% 
