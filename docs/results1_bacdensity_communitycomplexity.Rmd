@@ -72,7 +72,7 @@ fc_cfu_synID = data_cfu %>%
            logFC = log2(FC))
 ```
 
-We tested how the community complexity influenced changes in individual bacterial populations. Community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(`r kw_synID$parameter`) = `r kw_synID$statistic`, *p* = `r kw_synID$p_label`, $\eta^{2}$(`r kw_synID$parameter`) = `r keff_synID$effsize` [`r keff_synID$conf.low`-`r keff_synID$conf.high`]). This was reflected as a significant `r fc_cfu_synID$FC[fc_cfu_synID$synID=="S2"]`-fold increase in population densities composed of two-species communities (*Z* = `r abs(dunn_synID$statistic[1])`, *p* `r dunn_synID$p_label[1]`), and a pronounced `r (fc_cfu_synID$FC[fc_cfu_synID$synID=="S3"])^-1`-fold decrease in S3 (*Z* = `r abs(dunn_synID$statistic[2])`, *p* `r dunn_synID$p_label[2]`), both compared to the near-isogenic control, C (Figure \@ref(fig:figure_main_3)).
+We tested how the community complexity influenced changes in individual bacterial populations. Community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(`r kw_synID$parameter`) = `r kw_synID$statistic`, *p* = `r kw_synID$p_label`, $\eta^{2}$(`r kw_synID$parameter`) = `r keff_synID$effsize` [`r keff_synID$conf.low`-`r keff_synID$conf.high`]). This was reflected as a significant `r fc_cfu_synID$FC[fc_cfu_synID$synID=="S2"]`-fold increase in population densities composed of two-species communities (*W* = `r abs(dunn_synID$statistic[1])`, *p* `r dunn_synID$p_label[1]`), and a pronounced `r (fc_cfu_synID$FC[fc_cfu_synID$synID=="S3"])^-1`-fold decrease in S3 (*W* = `r abs(dunn_synID$statistic[2])`, *p* `r dunn_synID$p_label[2]`), both compared to the near-isogenic control, C (Figure \@ref(fig:figure_main_3)).
 
 ```{r cfu_analysis_dpi}
 # Wilcoxon test and effect size for sampling time (dpi)
@@ -88,7 +88,7 @@ fc_cfu_dpi = data_cfu %>%
            logFC = log2(FC))
 ```
 
-Changes in population density could be related to temporal changes. Thus, we evaluated how population density changed over the two times of sampling, namely 7 dpi and 14 dpi. Here we observed a small yet significant effect of time of sampling (Wilcoxon, *Z* = `r w_dpi$statistic`, *p* = `r w_dpi$p_label`, Wilcoxon's *r* = `r weff_dpi$effsize` [`r weff_dpi$conf.low`-`r weff_dpi$conf.high`]), representing an increase in `r fc_cfu_dpi$FC[fc_cfu_dpi$dpi=="14dpi"]`-fold between 7 and 14 dpi.
+Changes in population density could be related to temporal changes. Thus, we evaluated how population density changed over the two times of sampling, namely 7 dpi and 14 dpi. Here we observed a small yet significant effect of time of sampling (Wilcoxon, *W* = `r w_dpi$statistic`, *p* = `r w_dpi$p_label`, Wilcoxon's *r* = `r weff_dpi$effsize` [`r weff_dpi$conf.low`-`r weff_dpi$conf.high`]), representing an increase in `r fc_cfu_dpi$FC[fc_cfu_dpi$dpi=="14dpi"]`-fold between 7 and 14 dpi.
 
 ```{r cfu_analysis_taxa}
 # Wilcoxon test and effect size for bacterial group (taxa)
