@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript 
 
 library(spatstat)
+source(here('code', 'function_hyperframe.R'))
 
 # Set variables for creating the hyperframe in a two-dimensional plane
 xrange <- c(0,124.94)
@@ -12,6 +13,7 @@ formula_strain <- "~syncom + dpi + exp + img + strain"
  
 # Read coordinates file
 coordinates <- readRDS(here('results', 'coordinates.rds'))
+coordinates$channel <- factor(coordinates$channel) # channel must be converted to factors to be assigned as marks
 
 # Create hyperframe with marked points for channels
 H_syncom <- hyperframe_function(coordinates, xrange, yrange, unit, formula_syncom)

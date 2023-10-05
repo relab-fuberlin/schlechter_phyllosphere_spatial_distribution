@@ -6,6 +6,8 @@ output:
     df_print: paged
     keep_md: yes
   pdf_document: default
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -18,8 +20,6 @@ source(here('code', 'libraries_syncom.R'))
 source(here('code', 'palette_syncom.R'))
 source(here('code', 'theme_rs_spatial.R'))
 source(here('code', 'dunnet_function.R'))
-library(rstatix)
-library(coin)
 
 set.seed(19900725)
 

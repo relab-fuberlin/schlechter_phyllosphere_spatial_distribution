@@ -5,13 +5,14 @@ hyperframe_function <- function(df, xrange, yrange, unit, formula){
     # unit: str character indicating the unit of the two-dimensional plane
     # formula: str chr of the form "~var1+var2+varn" indicating the grouping factors
     #
+    W <- owin(xrange, yrange, unitname=unit)
+    
     clist <- split(df, as.formula(formula), sep="_")
     clist <- lapply(clist, na.omit)
     clist <- clist[sapply(clist, function(x) dim(x)[1]) > 0]
     clist <- lapply(clist, dplyr::select, c(x, y, channel))
     list_coord <- lapply(clist, "[", c("x", "y"))
-    wlist <- rep(list(W), length(list_coord))
-    plist <- mapply(as.ppp, clist, W = wlist, SIMPLIFY = FALSE, multitype=TRUE)
+    plist <- lapply(X = clist, FUN = as.ppp, W)
     H <- hyperframe(coord = plist, rep = names(plist))
     
     return(H)

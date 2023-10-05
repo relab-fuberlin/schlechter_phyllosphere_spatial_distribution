@@ -42,6 +42,7 @@ data_cell <- read.csv(here("results", "cell_density.csv")) %>%
 data_cell %>% head
 ```
 
+
 ```{r correlation}
 # Correlation between bacterial densities determined by CFU or by cell counts
 data_cell %>% 
@@ -49,11 +50,11 @@ data_cell %>%
         vars = c("logCell", "cfu_log"),
         method = "pearson",
         conf.level = 0.95)
-
 ```
 
 
 ```{r test_assumptions}
+# Linear model to test normality and homogeneity of variance
 linear_cell <-  lm(logCell ~ synID + dpi + taxa, data_cell)
 
 # Shapiro-Wilk test for normality
@@ -64,7 +65,7 @@ ncvTest(linear_cell)
 ```
 
 ```{r cell_analysis_synID}
-# Kruskal-Wallis test and effect size for community complexity (synID)
+# Kruskal-Wallis test and effect size for community complexity (synID) grouped by taxa
 kw_synID <- data_cell %>%
     group_by(taxa) %>% 
     kruskal_test(logCell ~ synID) %>% 
@@ -101,11 +102,11 @@ explanatory = "synID"
 group = "taxa"
 strain = "strain"
 
-# Fold change of population density by taxa and dpi
+# Fold change of population density by taxa and synID
 dunntest_taxa <- dun_func1(data_cell, "logCell", group, explanatory) %>% rename(synID = group2)
 fold_taxa <- fold_func1(data_cell, "cell_density", group, explanatory)
 
-# Fold change of population density by strain and dpi
+# Fold change of population density by strain and synID
 dunntest_strain <- dun_func1(data_cell, "logCell", strain, explanatory) %>% rename(synID = group2)
 fold_strain <- fold_func1(data_cell, "cell_density", strain, explanatory)
 ```
