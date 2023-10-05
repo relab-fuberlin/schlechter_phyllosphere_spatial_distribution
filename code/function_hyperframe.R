@@ -11,7 +11,6 @@ hyperframe_function <- function(df, xrange, yrange, unit, formula){
     clist <- lapply(clist, na.omit)
     clist <- clist[sapply(clist, function(x) dim(x)[1]) > 0]
     clist <- lapply(clist, dplyr::select, c(x, y, channel))
-    list_coord <- lapply(clist, "[", c("x", "y"))
     plist <- lapply(X = clist, FUN = as.ppp, W)
     H <- hyperframe(coord = plist, rep = names(plist))
     
