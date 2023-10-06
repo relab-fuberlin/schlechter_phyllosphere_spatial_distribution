@@ -23,11 +23,11 @@ cdf <- readRDS(here('results', 'cdf_fit1.rds'))
 quadrat_test <- readRDS(here('results', 'quadrat_test_fit1.rds'))
 ```
 
-We identified several archetypal patterns that follow the leaf surface topography such as veins and epidermal cell grooves with varying levels of occupancy. We observed that the cell distribution on the leaf surface was heterogenous by subsampling the data set to 500 random fields of view. We confirmed that these patterns can be described by an non-homogeneous Poisson process using a spatial Kolmogorov-Smirnov test (*D* = 0.04, *p* = 0), and a goodness-of-fit with Monte Carlo test ($/X^{2}$ = 1.57\times 10^{5}, *p* = 0, n = 999)
+We identified several archetypal patterns that follow the leaf surface topography such as veins and epidermal cell grooves with varying levels of occupancy. We observed that the cell distribution on the leaf surface was heterogenous by subsampling the data set to 500 random fields of view. We confirmed that these patterns can be described by an non-homogeneous Poisson process using a spatial Kolmogorov-Smirnov test (*D* = 0.04, *p* = 0), and a goodness-of-fit with Monte Carlo test ($X^{2}$ = 1.57\times 10^{5}, *p* = 0, n = 999)
 
 
 
-Next, we estimated cell density per cm2 for each biological replicate and compared our estimations of cell density from single-cell microscopy data (# cell cm^-2^) with colony count data (CFU gFW^-1^). We observed a positive correlation (Pearson's *r* = 0.37, *t* = 11.55, *p* = 9.19\times 10^{-29}). 
+Next, we estimated cell density per cm^2^ for each biological replicate and compared our estimations of cell density from single-cell microscopy data (# cell cm^-2^) with colony count data (CFU gFW^-1^). We observed a positive correlation (Pearson's *r* = 0.37, *t* = 11.55, *p* = 9.19\times 10^{-29}).
 
 
 ```r
@@ -96,7 +96,7 @@ fc_cell_dpi = data_cell %>%
            logFC = log2(FC))
 ```
 
-We observed a decrease in cell density between populations from S2 to S3 (Fig. 5a). Differences in cell density were not related to time of sampling (Wilcoxon, *W* = 87352, *p* = 0.56), but rather with a decrease of the *Methylobacterium* populations (log~2~FC = -1.08) and a marginal increase of *Sphingomonas* populations in S3 (log~2~FC = 0.34). These differences were driven by a decrease in MeL85 populations and an increase in SmFR1 in S3 (Fig. \@ref(fig:figure_main_5)). These observations indicate that the effect of the community complexity in a population was consistent at the CFU level and the single-cell resolution.
+We observed a decrease in cell density between populations from S2 to S3 (Fig. 5a). Differences in cell density were not related to time of sampling (Wilcoxon, *W* = 87352, *p* = 0.56), but rather with a decrease of the *Methylobacterium* populations (log~2~FC = -1.08) and a marginal increase of *Sphingomonas* populations in S3 (log~2~FC = 0.34). These differences were driven by a decrease in MeL85 populations and an increase in SmFR1 in S3 (Fig). These observations indicate that the effect of the community complexity in a population was consistent at the CFU level and the single-cell resolution.
 
 
 
