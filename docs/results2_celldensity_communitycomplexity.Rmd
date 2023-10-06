@@ -14,20 +14,43 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE, fig.align='center', dpi = 300, cache = TRUE)
 options(digits = 2, scipen = 1, pillar.signif = 3)
 
+# Libraries
+## Data processing
 library(here)
+library(tidyverse)
+## Stats
+library(rstatix)
+library(car)
+## Data visualisation
+library(ggdist)
+library(ggpubr)
+library(patchwork)
+library(RColorBrewer)
+library(wesanderson)
 
-source(here('code', 'libraries_syncom.R'))
+# Dependencies
 source(here('code', 'palette_syncom.R'))
 source(here('code', 'theme_rs_spatial.R'))
 source(here('code', 'dunnet_function.R'))
 
+# Set seed
 set.seed(19900725)
-
 ```
 
 ## Spatial distribution of individual strains depend on their community context
 
+We obtained a satisfactory representation of all populations at the single cell resolution and their distributions using the centre of mass of single cells in every bacterial combination (Fig. 2a, Fig. 4). 
+The centres of mass of the different cell populations were then used to generate spatial point patterns and further used to analyse spatial distribution patterns of bacteria. In total, we analysed 10,261 fields of view, corresponding to 25 communities (5× C, 10× S2, 10× S3), two sampling points, 3-4 biological replicates (individual plants), and 55±30 (mean±SD) fields of view per replicate, in two independent experiments (Table SX). 
+
+```{r}
+cdf <- readRDS(here('results', 'cdf_fit1.rds'))
+quadrat_test <- readRDS(here('results', 'quadrat_test_fit1.rds'))
+```
+
+We identified several archetypal patterns that follow the leaf surface topography such as veins and epidermal cell grooves with varying levels of occupancy. We observed that the cell distribution on the leaf surface was heterogenous by subsampling the data set to 500 random fields of view. We confirmed that these patterns can be described by an non-homogeneous Poisson process using a spatial Kolmogorov-Smirnov test (*D* = `r cdf$statistic`, *p* = `r cdf$p.value`), and a goodness-of-fit with Monte Carlo test ($X^{2}$ = `r quadrat_test$statistic`, *p* = `r quadrat_test$p.value`, n = 999)
+
 ```{r import_data, include=FALSE}
+# Import and combine CFU and cell data
 data_cell <- read.csv(here("results", "cell_density.csv")) %>% 
     rename(sample = rep) %>% 
     inner_join(., read.csv(here("results", "cfu_data_processed.csv")), 
@@ -36,22 +59,16 @@ data_cell <- read.csv(here("results", "cell_density.csv")) %>%
            synID = factor(synID),
            strain = factor(strain)) %>% 
     na.omit
-```
 
-```{r}
-data_cell %>% head
-```
-
-
-```{r correlation}
 # Correlation between bacterial densities determined by CFU or by cell counts
-data_cell %>% 
+cell_corr <- data_cell %>% 
     cor_test(
         vars = c("logCell", "cfu_log"),
         method = "pearson",
         conf.level = 0.95)
 ```
 
+Next, we estimated cell density per cm^2^ for each biological replicate and compared our estimations of cell density from single-cell microscopy data (# cell cm^-2^) with colony count data (CFU gFW^-1^). We observed a positive correlation (Pearson's *r* = `r cell_corr$cor`, *t* = `r cell_corr$statistic`, *p* = `r cell_corr$p`).
 
 ```{r test_assumptions}
 # Linear model to test normality and homogeneity of variance
@@ -74,11 +91,18 @@ keff_synID <- data_cell %>%
     group_by(taxa) %>% 
     kruskal_effsize(logCell ~ synID, ci=TRUE, nboot=100)
 
-# Dunn's Test
-dunn_synID <- data_cell %>% 
-    group_by(taxa) %>% 
-    dunn_test(logCell ~ synID, p.adjust.method = "holm") %>% 
-    mutate(p_label = case_when(p.adj < 0.05 ~ "< 0.05", TRUE ~ as.character(p.adj)))
+## Variables
+explanatory = "synID"
+group = "taxa"
+strain = "strain"
+
+# Fold change of population density by taxa and synID
+dunntest_taxa <- dun_func1(data_cell, "logCell", group, explanatory) %>% rename(synID = group2)
+fold_taxa <- fold_func1(data_cell, "cell_density", group, explanatory)
+
+# Fold change of population density by strain and synID
+dunntest_strain <- dun_func1(data_cell, "logCell", strain, explanatory) %>% rename(synID = group2)
+fold_strain <- fold_func1(data_cell, "cell_density", strain, explanatory)
 
 ```
 
@@ -95,27 +119,16 @@ fc_cell_dpi = data_cell %>%
            logFC = log2(FC))
 ```
 
-
-```{r, include=FALSE}
-## Variables
-explanatory = "synID"
-group = "taxa"
-strain = "strain"
-
-# Fold change of population density by taxa and synID
-dunntest_taxa <- dun_func1(data_cell, "logCell", group, explanatory) %>% rename(synID = group2)
-fold_taxa <- fold_func1(data_cell, "cell_density", group, explanatory)
-
-# Fold change of population density by strain and synID
-dunntest_strain <- dun_func1(data_cell, "logCell", strain, explanatory) %>% rename(synID = group2)
-fold_strain <- fold_func1(data_cell, "cell_density", strain, explanatory)
-```
+We observed a decrease in cell density between populations from S2 to S3 (Fig. 5a). Differences in cell density were not related to time of sampling (Wilcoxon, *W* = `r w_dpi$statistic`, *p* = `r w_dpi$p`), but rather with a decrease of the *Methylobacterium* populations (log~2~FC = `r fold_taxa$log2FC[fold_taxa$taxa=="Methylobacterium"&fold_taxa$synID=="S3"]`) and a marginal increase of *Sphingomonas* populations in S3 (log~2~FC = `r fold_taxa$log2FC[fold_taxa$taxa=="Sphingomonas"&fold_taxa$synID=="S3"]`). These differences were driven by a decrease in MeL85 populations and an increase in SmFR1 in S3 (Fig). These observations indicate that the effect of the community complexity in a population was consistent at the CFU level and the single-cell resolution.
 
 ```{r figure_main_5_setup, include = FALSE}
 # Plot CFU
 # Multiple comparisons
-plt.cell.stat = dunn_synID %>% 
-    mutate(p.adj.signif = case_when(p.adj.signif == "****" ~ "*", TRUE ~ p.adj.signif), y.position = c(7.5,8.5,8,7.5,8.5,8))
+plt.cell.stat = dunntest_taxa %>% 
+    ungroup %>% 
+    rename(group2 = synID) %>% 
+    mutate(p.adj.label = case_when(p.adj < 0.05 ~ "*", TRUE ~ "ns"), 
+           y.position = c(7.5,8.5,8,7.5,8.5,8))
 
 plt3.a <- data_cell %>% 
     ggplot(aes(synID, logCell))+
@@ -133,7 +146,7 @@ plt3.a <- data_cell %>%
     stat_pvalue_manual(
         data = plt.cell.stat,
         size = 5,
-        label = "p.adj.signif",
+        label = "p.adj.label",
         xmin = "group1", xmax = "group2",
         y.position = "y.position")+
     scale_y_continuous(limits = c(2,9), breaks=c(4,6,8))+
