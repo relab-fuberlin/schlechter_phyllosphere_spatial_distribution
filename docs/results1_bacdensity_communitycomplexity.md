@@ -6,6 +6,8 @@ output:
     df_print: paged
     keep_md: yes
   pdf_document: default
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -60,7 +62,7 @@ fc_cfu_synID = data_cfu %>%
            logFC = log2(FC))
 ```
 
-We tested how the community complexity influenced changes in individual bacterial populations. Community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(2) = 307.02, *p* = < 0.05, $\eta^{2}$(2) = 0.34 [0.29-0.38]). This was reflected as a significant 2.29-fold increase in population densities composed of two-species communities (*Z* = 4.48, *p* < 0.05), and a pronounced 4.71-fold decrease in S3 (*Z* = 8.62, *p* < 0.05), both compared to the near-isogenic control, C (Figure \@ref(fig:figure_main_3)).
+We tested how the community complexity influenced changes in individual bacterial populations. Community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(2) = 307.02, *p* = < 0.05, $\eta^{2}$(2) = 0.34 [0.29-0.38]). This was reflected as a significant 2.29-fold increase in population densities composed of two-species communities (*W* = 4.48, *p* < 0.05), and a pronounced 4.71-fold decrease in S3 (*W* = 8.62, *p* < 0.05), both compared to the near-isogenic control, C (Figure \@ref(fig:figure_main_3)).
 
 
 ```r
@@ -77,7 +79,7 @@ fc_cfu_dpi = data_cfu %>%
            logFC = log2(FC))
 ```
 
-Changes in population density could be related to temporal changes. Thus, we evaluated how population density changed over the two times of sampling, namely 7 dpi and 14 dpi. Here we observed a small yet significant effect of time of sampling (Wilcoxon, *Z* = 84973, *p* = < 0.05, Wilcoxon's *r* = 0.15 [0.09-0.22]), representing an increase in 1.69-fold between 7 and 14 dpi.
+Changes in population density could be related to temporal changes. Thus, we evaluated how population density changed over the two times of sampling, namely 7 dpi and 14 dpi. Here we observed a small yet significant effect of time of sampling (Wilcoxon, *W* = 84973, *p* = < 0.05, Wilcoxon's *r* = 0.15 [0.09-0.22]), representing an increase in 1.69-fold between 7 and 14 dpi.
 
 
 ```r
@@ -113,7 +115,7 @@ wrap_elements(full = plt3.a) + plt3.b + plt3.c  + plot_annotation(tag_levels = "
 ```
 
 <div class="figure" style="text-align: center">
-<img src="results1_bacdensity_communitycomplexity_files/figure-html/label: figure_main_3-1.png" alt="Bacterial population density in the arabidopsis phyllosphere" id="fig-label-figure-main-3-1" />
+<img src="results1_bacdensity_communitycomplexity_files/figure-html/figure_main_3-1.png" alt="Bacterial population density in the arabidopsis phyllosphere" id="fig-figure-main-3-1" />
 <p class="caption">Bacterial population density in the arabidopsis phyllosphere</p>
 </div>
 

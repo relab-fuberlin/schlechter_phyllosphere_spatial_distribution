@@ -266,7 +266,7 @@ plt.strain <- w1_strain_plot_data %>%
 
 ```
 
-```{r figure_main_5, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere", dev = c("png", "tiff"), fig.dim=c(12,5)}
+```{r figure_main_5, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere", dev = "png", fig.dim=c(12,5)}
 areas <- c(patchwork::area(1,1,3,3), patchwork::area(1,4,1), patchwork::area(2,4,4))
 wrap_elements(plot = plt.frq) + plt.taxa + plt.strain  + 
     plot_annotation(tag_levels = "A") + 
@@ -275,7 +275,7 @@ wrap_elements(plot = plt.frq) + plt.taxa + plt.strain  +
           plot.margin = margin(0,1,0,1))
 ```
 
-```{r plot_sup_pattern, fig.id=TRUE, fig.cap="Spatial patterns", dev = c("png", "tiff"), fig.dim=c(6,6)}
+```{r plot_sup_pattern, fig.id=TRUE, fig.cap="Spatial patterns", dev = "png", fig.dim=c(6,6)}
 plt.pattern <- auc_fold_change %>% 
     ggplot(aes(taxa, fractional_change))+
     facet_grid(dpi ~ type, labeller = labeller(dpi = dpi.lab2, type = pattern.lab))+
@@ -330,7 +330,7 @@ frq.plt.spfa2 <- freq_plots(fractions_strain, "spfa2")
 
 ```
 
-```{r figure_supplemental_5, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots K", dev = c("png", "tiff"), fig.dim=c(12,8)}
+```{r figure_supplemental_5, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots K", dev = "png", fig.dim=c(12,8)}
 frq.plt.meL85 + frq.plt.meL92 + frq.plt.mr01 + frq.plt.smfr1 + frq.plt.spfa2 + 
     plot_annotation(tag_levels = "A")+
     plot_layout(ncol = 5, guides = "collect") & 

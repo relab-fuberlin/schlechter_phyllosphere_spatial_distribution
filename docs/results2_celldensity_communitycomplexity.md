@@ -105,7 +105,8 @@ We observed a decrease in cell density between populations from S2 to S3 (Fig. 5
 areas <- c(patchwork::area(1,1,3), patchwork::area(1,2,1), patchwork::area(2,2,3))
 wrap_elements(full = plt3.a) + plt3.b + plt3.c  + 
     plot_annotation(tag_levels = "A") + 
-    plot_layout(guides = "collect", design = areas) & theme(legend.box.just = "center")
+    plot_layout(guides = "collect", design = areas) & 
+    theme(legend.box.just = "center")
 ```
 
 <div class="figure" style="text-align: center">
