@@ -1,9 +1,10 @@
+##  K estimates
+library(spatstat)
 
-
-# Set seed
+#   Set seed
 set.seed(19900725)
 
-# Load data
+#   Load data
 H <- readRDS(here('results', 'hyperframe_strain.rds'))
 H_summary <- readRDS(here('results', 'hyperframe_strain_summary.rds'))
 
