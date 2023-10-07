@@ -37,7 +37,6 @@ H_syncom$dpi = H_syncom_summary$dpi
 saveRDS(H_syncom, here('results', 'hyperframe_syncom.rds'))
 saveRDS(H_syncom_summary, here('results', 'hyperframe_syncom_summary.rds'))
 
-
 # Create hyperframe for each strain
 H_strain <- hyperframe_function(coordinates, xrange, yrange, unit, formula_strain)
 H_strain_summary <- coordinates %>% 
