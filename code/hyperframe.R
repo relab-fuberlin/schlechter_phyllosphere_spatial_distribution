@@ -25,11 +25,6 @@ H_syncom_summary <- coordinates %>%
 reord_index <- match(H_syncom$rep, H_syncom_summary$rep)
 H_syncom_summary <- H_syncom_summary[reord_index,]
 
-n <- NULL
-for(i in 1:nrow(H_syncom)){
-    n[i] <- anyDuplicated.ppp(H_syncom$coord[[i]])
-}
-
 # Add attributes to the hyperframe
 H_syncom$C0 = H_syncom_summary$C0
 H_syncom$C1 = H_syncom_summary$C1
