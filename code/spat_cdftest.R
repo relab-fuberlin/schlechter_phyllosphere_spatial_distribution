@@ -40,22 +40,12 @@ subsample_H <- H2[sample(nrow(H2), size=500, replace = FALSE),]
 # test wrong model
 fit0 <- mppm(coord ~ 1, subsample_H)
 cdf_fit0 <- cdf.test(fit0, "x")
+write_rds(cdf_fit0, here('results', 'cdf_fit0.rds'))
 qt_fit0 <- quadrat.test(fit0, method = "MonteCarlo", nsim=999)
 write_rds(qt_fit0, here('results', 'quadrat_test_fit0.rds'))
 
-# test right model
 fit1 <- mppm(coord ~ id, subsample_H)
-cdf.test(fit1, "x")
-qt_fit0 <- quadrat.test(fit0, method = "MonteCarlo", nsim=999)
-write_rds(qt_fit1, here('results', 'quadrat_test_fit1.rds'))
-
-
-
-H <- hyperframe(X=waterstriders)
-# Poisson with constant intensity for all patterns
-fit1 <- mppm(X~1, H)
-quadrat.test(fit1, nx=2)
-
-# uniform Poisson with different intensity for each pattern
-fit2 <- mppm(X ~ id, H)
-quadrat.test(fit2, nx=2)
+cdf_fit1 <- cdf.test(fit1, "x")
+write_rds(cdf_fit1, here('results', 'cdf_fit0.rds'))
+qt_fit1 <- quadrat.test(fit0, method = "MonteCarlo", nsim=999)
+write_rds(qt_fit1, here('results', 'quadrat_test_fit0.rds'))
