@@ -1,13 +1,12 @@
-data/
-results/
-renv/
+data/*
+results/*
+renv/*
 docs/*
 !docs/*.Rmd
 
 .Ruserdata.DS_Store
 .DS_Store
 .Rprofile
-
 
 # History files
 .Rhistory
