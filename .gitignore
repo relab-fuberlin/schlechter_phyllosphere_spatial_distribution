@@ -1,8 +1,9 @@
 data/
 results/
+renv/
 !docs/*.Rmd
 
 .Rproj.user
 .Rhistory
 .RData
-.Ruserdata
+.Ruserdata.DS_Store
