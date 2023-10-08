@@ -1,9 +1,0 @@
-data/
-results/
-renv/
-!docs/*.Rmd
-
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata.DS_Store
