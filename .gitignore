@@ -1,6 +1,7 @@
 data/
 results/
 renv/
+docs/*
 !docs/*.Rmd
 
 .Ruserdata.DS_Store
