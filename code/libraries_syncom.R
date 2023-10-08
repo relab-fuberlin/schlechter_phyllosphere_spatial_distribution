@@ -7,22 +7,18 @@
 # tidy data
 library(tidyverse)
 library(reshape2)
+library(broom)
 
 # plots
 library(patchwork)
-library(gridExtra)
 library(RColorBrewer)
 library(ggpubr)
 library(wesanderson)
 library(ggdist)
+library(ggh4x)
 
 # stats
 library(car)
-library(emmeans)
-library(lsr)
 library(spatstat)
-library(MESS)
-library(MASS)
-library(betareg)
-library(multcomp)
-library(multcompView)
+library(DescTools)
+library(rstatix)
