@@ -8,12 +8,13 @@ hyperframe_function <- function(df, xrange, yrange, unit, formula){
     W <- owin(xrange, yrange, unitname=unit)
     
     clist <- split(df, as.formula(formula), sep="_")
-    clist <- lapply(clist, na.omit)
+    clist <- map(clist, na.omit)
     clist <- clist[sapply(clist, function(x) dim(x)[1]) > 0]
-    clist <- lapply(clist, dplyr::select, c(x, y, channel))
-    plist <- lapply(X = clist, FUN = as.ppp, W)
-    plist_unique <- lapply(X = plist, FUN = unique.ppp)
-    H <- hyperframe(coord = plist_unique, rep = names(plist_unique))
+    clist <- map(clist, dplyr::select, c(x, y, channel))
+    plist <- map(clist, as.ppp, W)
+    plist_unique <- map(plist, unique.ppp)
+    H <- hyperframe(coord = plist_unique)
+    row.names(H) <- names(plist_unique)
     
     return(H)
 }
