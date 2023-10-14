@@ -1,5 +1,5 @@
 ---
-title: 'Spatial distribution - Section 3'
+title: 'Spatial distribution - Section 4'
 author: "Rudolf Schlechter"
 output: 
     html_document:
@@ -190,7 +190,7 @@ plt.pattern <- left_join(auc_fold_change, w1_taxa, by = c("dpi", "type", "taxa_p
 
 ```
 
-```{r figure_main_6, fig.id=TRUE, dev = "png", fig.dim=c(5,10)}
+```{r figure_main_6, fig.id=TRUE, dev = "png", fig.dim=c(5,8)}
 plt.frq / wrap_elements(plot = plt.pattern) + 
     plot_annotation(tag_levels = "A") &
     theme(legend.box.just = "center",
@@ -230,7 +230,7 @@ freq_plots <- function(name){
                            expand = c(0,0), breaks = seq(0,1,0.5))+
         scale_fill_manual(name = "Spatial Pattern", labels = pattern.lab, values = pattern.pal)+
         theme_rs()+
-        labs(title = name)+
+        labs(title = pair.lab[name])+
         theme(panel.spacing.x = grid::unit(0.5, "line"),
               panel.spacing.y = grid::unit(1, "line"),
               strip.text = element_text(angle=0, vjust = 0.5, hjust = 0, 
@@ -241,5 +241,10 @@ freq_plots <- function(name){
 list_plot <- unique_pair %>% 
     map(~freq_plots(.x))
 
+```
+
+```{r figure_supplemental_6, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots g", dev = "png", fig.dim=c(12,8)}
+wrap_plots(list_plot, ncol = 5, guides = "collect")+
+    plot_annotation(tag_levels = "A")
 ```
 
