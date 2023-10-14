@@ -148,7 +148,7 @@ w1_syncom %>% filter(p_label == "*")
 ```
 
 
-```{r}
+```{r, include = FALSE}
 plt.frq <- fractions %>% 
     group_by(taxa_pair, synID, dpi, type, r) %>% 
     summarise(mean_fraction = mean(fraction), .groups="drop") %>% 
