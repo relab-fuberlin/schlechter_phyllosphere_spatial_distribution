@@ -63,7 +63,6 @@ w1_type <-  auc_fold_change %>%
 
 ```
 
-
 ```{r analysis_dpi}
 ## Summary
 summary_dpi <- fractional_change_median(auc_fold_change, group="dpi")
@@ -168,7 +167,6 @@ w1_syncom <-  auc_fold_change %>%
 w1_syncom %>% filter(p_label == "*")
 ```
 
-
 ```{r, include = FALSE}
 plt.frq <- fractions %>% 
     group_by(taxa_pair, synID, dpi, type, r) %>% 
@@ -218,15 +216,13 @@ plt.frq / wrap_elements(plot = plt.pattern) +
           plot.margin = margin(0,1,0,1))
 ```
 
-
 We noticed that the frequencies of co-aggregation were generally lower than those observed from within-population aggregation. However, co-aggregation was detected in every strain pair in S2 communities at each sampling point (Fig. S4). In general, the presence of a third strain decreased these co-aggregation frequencies. We observed that co-aggregation was 23% lower in S3 than S2 at 7 dpi (one sample t-test, t29 = -2.37, p = 0.024), but became comparable at 14 dpi (Fig. 7b, one sample t-test, t29 = 0.66, p = 0.51). Co-aggregation at 14 dpi was higher than at 7 dpi in S3 (two sample t-test, t58 = -2.09, p = 0.041).
 
-We determined the maximal frequency of co-aggregation for each bacterial pair, which was generally observed at a ~1.5 μm distance between cells (Fig. 7a, Fig. S4). We observed an increase of co-aggregation over time, as maximal co-aggregation frequencies increased from 20.3 ± 12.6% to 40.8 ± 16.5% at 7 and 14 dpi, respectively (Fig. 7c). 
+We determined the maximal frequency of co-aggregation for each bacterial pair, which was generally observed at a \~1.5 μm distance between cells (Fig. 7a, Fig. S4). We observed an increase of co-aggregation over time, as maximal co-aggregation frequencies increased from 20.3 ± 12.6% to 40.8 ± 16.5% at 7 and 14 dpi, respectively (Fig. 7c).
 
-In general, we observed that co-aggregation frequencies decreased rapidly after 1.5 μm. Since co-aggregation was detected at every distance range (Fig. S5a), we focused on the differences in co-aggregation only within the 0–10 μm distance interval instead of the maximal range of co-aggregation. Based on the empirical cumulative distribution function (Fig. S5b), 64% of the co-aggregation pattern was observed at a distance equal or less than 10 μm, in which the maximal frequency of co-aggregation was captured. We observed that at 14 dpi, a high percentage of bacterial pairs (66.6%) co-aggregated up to 10 μm, in comparison to 53.1% at 7 dpi (Fig. 7d, F1,71 = 17.79, p < 0.05). Although no differences were observed between S2 and S3 (F1,71 = 2.57, p = 0.11), we noticed that the initial variation in co-aggregation distances in S3 was markedly higher compared to S2 after 7 days (Fig. 7e). After 14 days, the variation in co-aggregation distances in S3 decreased and was comparable to S2 treatments. 
+In general, we observed that co-aggregation frequencies decreased rapidly after 1.5 μm. Since co-aggregation was detected at every distance range (Fig. S5a), we focused on the differences in co-aggregation only within the 0--10 μm distance interval instead of the maximal range of co-aggregation. Based on the empirical cumulative distribution function (Fig. S5b), 64% of the co-aggregation pattern was observed at a distance equal or less than 10 μm, in which the maximal frequency of co-aggregation was captured. We observed that at 14 dpi, a high percentage of bacterial pairs (66.6%) co-aggregated up to 10 μm, in comparison to 53.1% at 7 dpi (Fig. 7d, F1,71 = 17.79, p \< 0.05). Although no differences were observed between S2 and S3 (F1,71 = 2.57, p = 0.11), we noticed that the initial variation in co-aggregation distances in S3 was markedly higher compared to S2 after 7 days (Fig. 7e). After 14 days, the variation in co-aggregation distances in S3 decreased and was comparable to S2 treatments.
 
 Our results indicate that the low co-aggregation and increased randomness observed in more complex communities are only transitional, as from 7 to 14 dpi, co-aggregation between pairs in presence of a third strain are comparable to conditions where only these pairs were present in the phyllosphere.
-
 
 ```{r plot_sup_freq_all, include=FALSE}
 fractions_pairs <- fractions %>% 
@@ -268,4 +264,3 @@ list_plot <- unique_pair %>%
 wrap_plots(list_plot, ncol = 5, guides = "collect")+
     plot_annotation(tag_levels = "A")
 ```
-
