@@ -20,14 +20,14 @@ pcf_S2_C0C1 <- pcf_function(H_S2, i = "C0", j = "C1")
 pcf_S2_C0C1 <- pcf_S2_C0C1 %>% mutate(pair = "C0.C1", pair_inv = "C1.C0")
 
 #   PCF for S3
-H_S3 <- H[H$C0 > 10 & H$C1 >10 & H$C2>10,] # Filter by S3 and FOV with at least 10 cells per channel
-pcf_S3_C0C1 <- pcf_function(H_S3, i = "C0", j = "C1")
+H_S3 <- H[grep("S3", H$syncom)] # Filter by S3 
+pcf_S3_C0C1 <- pcf_function(H_S3[H_S3$C0 > 10 & H_S3$C1 >10,], i = "C0", j = "C1")
 pcf_S3_C0C1 <- pcf_S3_C0C1 %>% mutate(pair = "C0.C1", pair_inv = "C1.C0")
 
-pcf_S3_C0C2 <- pcf_function(H_S3, i = "C0", j = "C2")
+pcf_S3_C0C2 <- pcf_function(H_S3[H_S3$C0 > 10 & H_S3$C2 >10,], i = "C0", j = "C2")
 pcf_S3_C0C2 <- pcf_S3_C0C2 %>% mutate(pair = "C0.C2", pair_inv = "C2.C0")
 
-pcf_S3_C1C2 <- pcf_function(H_S3, i = "C1", j = "C2")
+pcf_S3_C1C2 <- pcf_function(H_S3[H_S3$C1 > 10 & H_S3$C2 >10,], i = "C1", j = "C2")
 pcf_S3_C1C2 <- pcf_S3_C1C2 %>% mutate(pair = "C1.C2", pair_inv = "C2.C1")
 
 
