@@ -50,7 +50,7 @@ metadata <- read.csv(here('data', 'comm_id.csv')) %>%
     pivot_longer(cols="C0.C1":"C2.C1", names_to = 'pair', values_to = "strain_pair") %>% 
     filter(!grepl("NA", strain_pair))
 
-unique_pair <- c("meL85.smfr1", "meL85.spfa2", "meL85.meL92", "meL85.mr01", "meL92.smfr1", "meL92.spfa2", "meL92.mr01", "mr01.smr1", "mr01.spfa2", "smfr1.spfa2")
+unique_pair <- c("meL85.smfr1", "meL85.spfa2", "meL85.meL92", "meL85.mr01", "meL92.smfr1", "meL92.spfa2", "meL92.mr01", "mr01.smfr1", "mr01.spfa2", "smfr1.spfa2")
 
 stat_pcf <- left_join(pcf, metadata, by=c("exp", "dpi", "syncom", "pair")) %>% 
     select(syncom, synID, comID, dpi, exp, img, r, obs, theo, lo, hi, strain_pair) %>% 
