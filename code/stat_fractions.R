@@ -36,7 +36,7 @@ data %>%
         aggregate = case_when(obs > hi ~ 1, TRUE ~ 0),
         regular = case_when(obs < lo ~ 1, TRUE ~ 0),
         random = case_when(obs < hi & obs > lo ~ 1, TRUE ~ 0)) %>% 
-    group_by(syncom, dpi, r, pair, pair_inv) %>% 
+    group_by(syncom, dpi, r, strain_pair) %>% 
     summarise(
         aggregate = sum(aggregate),
         regular = sum(regular),
@@ -51,6 +51,6 @@ data %>%
                  names_to = "type", 
                  values_to = "fraction", 
                  values_drop_na = TRUE) %>% 
-    select(syncom, dpi, r, pair, pair_inv, type, fraction) %>% 
+    select(syncom, dpi, r, strain_pair, type, fraction) %>% 
     mutate(type = factor(type, levels = c('regular_fraction', 'random_fraction', 'aggregate_fraction'))) %>% 
     write.csv(here('results', 'stat_pcf_fractions.csv'))
