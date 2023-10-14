@@ -99,9 +99,13 @@ w1_taxaType <-  auc_fold_change %>%
         p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
 
 ## Two samples Wilcoxon test for taxa pairs
-w2_taxa <- auc_fold_change %>% 
+kw_taxa <- auc_fold_change %>% 
     group_by(type, dpi) %>% 
-    wilcox_test(fractional_change ~ taxa_pair, p.adjust.method = "holm", detailed = TRUE) %>% 
+    kruskal_test(fractional_change ~ taxa_pair)
+
+dunn_taxa <- auc_fold_change %>% 
+    group_by(type, dpi) %>% 
+    dunn_test(fractional_change ~ taxa_pair, p.adjust.method = "holm", detailed = TRUE) %>% 
     filter(p.adj < 0.05)
 
 ## One sample Wilcoxon test for taxa pairs
@@ -113,23 +117,40 @@ w1_taxa <-  auc_fold_change %>%
         p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
         p_label = case_when(p < 0.05 ~ "*", TRUE ~ ""))
 
+## Kruskal Wallis test for strain pairs
+kw_strain <- auc_fold_change %>% 
+    group_by(type, dpi) %>% 
+    kruskal_test(fractional_change ~ strain_pair)
+
+dunn_strain <- auc_fold_change %>% 
+    group_by(type, dpi) %>% 
+    dunn_test(fractional_change ~ strain_pair, p.adjust.method = "holm", detailed = TRUE) %>% 
+    select(dpi, type, group1, group2, p, p.adj, p.adj.signif)
+
 ## Two samples Wilcoxon test for strain pairs
 w2_strain <- auc_fold_change %>% 
     group_by(type, dpi) %>% 
     wilcox_test(fractional_change ~ strain_pair, p.adjust.method = "holm", detailed = TRUE)
+w2_strain %>% filter(p.adj < 0.05)
 
 ## One sample Wilcoxon test for strain pairs
 w1_strain  <-  auc_fold_change %>% 
     group_by(dpi, strain_pair, type) %>% 
-    wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
+    wilcox_test(fractional_change ~ 1, mu = 0, p.adjust.method = "holm", detailed = TRUE) %>% 
     select(dpi, strain_pair, type, estimate, statistic, p) %>% 
     mutate(
         p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
         p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
+w1_strain %>% filter(p < 0.05)
 
 ```
 
 ```{r}
+## Kruskal Wallis test for strain pairs
+kw_syncom <- auc_fold_change %>% 
+    group_by(type, dpi) %>% 
+    kruskal_test(fractional_change ~ syncom)
+
 ## Two samples Wilcoxon test for SynCom
 w2_syncom <- auc_fold_change %>% 
     group_by(type, dpi) %>% 
@@ -243,7 +264,7 @@ list_plot <- unique_pair %>%
 
 ```
 
-```{r figure_supplemental_6, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots g", dev = "png", fig.dim=c(12,8)}
+```{r figure_supplemental_6, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots g", dev = "png", fig.dim=c(16,8)}
 wrap_plots(list_plot, ncol = 5, guides = "collect")+
     plot_annotation(tag_levels = "A")
 ```
