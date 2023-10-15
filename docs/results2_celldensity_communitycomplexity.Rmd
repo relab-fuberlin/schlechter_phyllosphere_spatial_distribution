@@ -1,5 +1,5 @@
 ---
-title: "Spatial distribution paper - Section 2"
+title: "Spatial distribution - Section 2"
 author: "Rudolf Schlechter"
 output:
   html_document:

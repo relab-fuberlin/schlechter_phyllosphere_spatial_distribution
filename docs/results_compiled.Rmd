@@ -1,0 +1,18 @@
+---  
+title: My Report  
+output: 
+  pdf_document:
+    toc: yes 
+---
+
+```{r child = "results1_bacdensity_communitycomplexity.Rmd"}
+```
+
+```{r child = "results2_celldensity_communitycomplexity.Rmd"}
+```
+
+```{r, child = "results3_Kest_communitycomplexity.Rmd"}
+```
+
+```{r, child = "results4_PCF_communitycomplexity.Rmd"}
+```
