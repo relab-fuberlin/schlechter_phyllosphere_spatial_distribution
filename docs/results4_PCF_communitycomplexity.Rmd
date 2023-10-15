@@ -36,7 +36,7 @@ set.seed(19900725)
 
 ### Effect of community complexity on interspecific spatial correlations
 
-We investigated the effect of community complexity on interspecific interactions by determining the co-aggregation frequencies of pairs of species in different treatments (S2 and S3) and sampling times (7 and 14 dpi). Co-aggregation was determined through pair cross correlations at a given distance, g(r), between pairs of strains (Fig. 7a, Fig. S4). Frequencies were then determined from all replicates and the area under the curve was used as a measure to compare aggregation patterns of pairs of species in S3 relative to S2 communities.
+We investigated the effect of community complexity on the spatial patterns between pairs of species (interspecific interactions). Pair cross correlations, $\hat{g}$(r), indicated whether an aggregated, random, or regular pattern was detected at a given distance (Fig. 7a, Fig. S4). Frequencies were then determined from all replicates and the area under the curve was used as a measure to compare a spatial pattern of pairs of species in S3 relative to S2.
 
 ```{r analysis_type}
 ## Summary
@@ -52,6 +52,10 @@ kw_type <- auc_fold_change %>%
 kw_eff_type <- auc_fold_change %>% 
     kruskal_effsize(fractional_change ~ type, ci=TRUE, nboot=100)
 
+## Dunn's test
+dunn_type <- auc_fold_change %>% 
+    dunn_test(fractional_change ~ type, p.adjust.method = "holm")
+
 ## One-sample Wilcoxon test
 w1_type <-  auc_fold_change %>% 
     group_by(type) %>% 
@@ -63,9 +67,11 @@ w1_type <-  auc_fold_change %>%
 
 ```
 
+In general terms, pairs of species aggregated in S2 communities at each sampling point (Fig. XXA, Fig. SXX). The presence of a third strain decreased these aggregation frequencies, and consequently, regularity and randomness also changed in S3 (pair + one extra species) compared to the pairs alone (S2) in the phyllosphere (Kruskal-Wallis, *H*(`r kw_type$df`) = `r kw_type$statistic`, *p* `r kw_type$p_label`). Aggregation and regularity decreased in `r summary_type$percentage[summary_type$type=="aggregate_fraction"]` and `r summary_type$percentage[summary_type$type=="regular_fraction"]`%, respectively, while randomness was `r summary_type$percentage[summary_type$type=="random_fraction"]`% higher.
+
 ```{r analysis_dpi}
 ## Summary
-summary_dpi <- fractional_change_median(auc_fold_change, group="dpi")
+summary_dpi <- fractional_change_median(auc_fold_change, group=c("dpi", "type"))
 
 ## One sample Wilcoxon test
 w1_dpi = auc_fold_change %>% 
@@ -79,25 +85,25 @@ w1_dpi = auc_fold_change %>%
 ## Two samples Wilcoxon test
 w2_dpi <- auc_fold_change %>% 
     group_by(type) %>% 
-    wilcox_test(fractional_change ~ dpi, p.adjust.method = "holm", detailed = TRUE)
+    wilcox_test(fractional_change ~ dpi, p.adjust.method = "holm", detailed=TRUE)
 ```
 
-```{r analysis_taxa_strain}
-## Two samples Wilcoxon test for taxa type
-w2_taxaType <- auc_fold_change %>% 
-    group_by(type, dpi) %>% 
-    wilcox_test(fractional_change ~ taxa_type, p.adjust.method = "holm", detailed = TRUE)
+To further dissect these differences, we grouped the species pairs based on their identity, as a pair was composed of either two methylobacteria (MM), a methylobacterium and a sphingomonad (MS), or two sphingomonads (SS). We noticed that randomness was high at 7 dpi () for pairs belonging to an S3 community, and it was associated with pairs of species containing at least one *Methylobacterium* species (MM and MS) (Fig. XXB). However, the randomness of these pairs decreased over time and became comparable to S2 at 14 dpi. The decrease in aggregation was only observed in MM pairs at 14 dpi. By contrast, pairs composed of only *Sphingomonas* species (SS) were not different between S2 and S3.
 
-## One sample Wilcoxon test for taxa type
-w1_taxaType <-  auc_fold_change %>% 
-    group_by(dpi, type, taxa_type) %>% 
+Our results indicate that *Methylobacterium* species are more susceptible than *Sphingomonas* to changes in their spatial distribution depending on their community context. The pairs containing at least one *Methylobacterium* were randomly distributed in more complex communities initially.
+
+```{r analysis_taxa_strain}
+## One sample Wilcoxon test for taxa pairs
+w1_taxa <-  auc_fold_change %>% 
+    group_by(dpi, type, taxa_pair) %>% 
     wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
-    select(dpi, type, taxa_type, estimate, statistic, p) %>% 
+    select(dpi, type, taxa_pair, estimate, statistic, p) %>% 
     mutate(
         p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
-        p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
+        p_label = case_when(p < 0.05 ~ "*", TRUE ~ ""))
+w1_taxa %>% filter(p_label == "*")
 
-## Two samples Wilcoxon test for taxa pairs
+## Kruskal-Wallis test for taxa pairs
 kw_taxa <- auc_fold_change %>% 
     group_by(type, dpi) %>% 
     kruskal_test(fractional_change ~ taxa_pair)
@@ -107,15 +113,14 @@ dunn_taxa <- auc_fold_change %>%
     dunn_test(fractional_change ~ taxa_pair, p.adjust.method = "holm", detailed = TRUE) %>% 
     filter(p.adj < 0.05)
 
-## One sample Wilcoxon test for taxa pairs
-w1_taxa <-  auc_fold_change %>% 
-    group_by(dpi, type, taxa_pair) %>% 
-    wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
-    select(dpi, type, taxa_pair, estimate, statistic, p) %>% 
-    mutate(
-        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
-        p_label = case_when(p < 0.05 ~ "*", TRUE ~ ""))
+## Two samples Wilcoxon  test for taxa pairs over time
+w2_dpi_taxa <- auc_fold_change %>% 
+    group_by(type, taxa_pair) %>% 
+    wilcox_test(fractional_change ~ dpi, p.adjust.method = "holm", detailed = TRUE)
 
+```
+
+```{r, include = FALSE}
 ## Kruskal Wallis test for strain pairs
 kw_strain <- auc_fold_change %>% 
     group_by(type, dpi) %>% 
@@ -141,11 +146,10 @@ w1_strain  <-  auc_fold_change %>%
         p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
         p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
 w1_strain %>% filter(p < 0.05)
-
 ```
 
-```{r}
-## Kruskal Wallis test for strain pairs
+```{r, include = FALSE}
+## Kruskal Wallis test for  Syncom
 kw_syncom <- auc_fold_change %>% 
     group_by(type, dpi) %>% 
     kruskal_test(fractional_change ~ syncom)
@@ -156,7 +160,7 @@ w2_syncom <- auc_fold_change %>%
     wilcox_test(fractional_change ~ syncom, p.adjust.method = "holm", detailed = TRUE) %>% 
     filter(p.adj < 0.05)
 
-## One sample Wilcoxon test for taxa pairs
+## One sample Wilcoxon test for SynCom
 w1_syncom <-  auc_fold_change %>% 
     group_by(dpi, type, syncom) %>% 
     wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
@@ -216,13 +220,6 @@ plt.frq / wrap_elements(plot = plt.pattern) +
           plot.margin = margin(0,1,0,1))
 ```
 
-We noticed that the frequencies of co-aggregation were generally lower than those observed from within-population aggregation. However, co-aggregation was detected in every strain pair in S2 communities at each sampling point (Fig. S4). In general, the presence of a third strain decreased these co-aggregation frequencies. We observed that co-aggregation was 23% lower in S3 than S2 at 7 dpi (one sample t-test, t29 = -2.37, p = 0.024), but became comparable at 14 dpi (Fig. 7b, one sample t-test, t29 = 0.66, p = 0.51). Co-aggregation at 14 dpi was higher than at 7 dpi in S3 (two sample t-test, t58 = -2.09, p = 0.041).
-
-We determined the maximal frequency of co-aggregation for each bacterial pair, which was generally observed at a \~1.5 μm distance between cells (Fig. 7a, Fig. S4). We observed an increase of co-aggregation over time, as maximal co-aggregation frequencies increased from 20.3 ± 12.6% to 40.8 ± 16.5% at 7 and 14 dpi, respectively (Fig. 7c).
-
-In general, we observed that co-aggregation frequencies decreased rapidly after 1.5 μm. Since co-aggregation was detected at every distance range (Fig. S5a), we focused on the differences in co-aggregation only within the 0--10 μm distance interval instead of the maximal range of co-aggregation. Based on the empirical cumulative distribution function (Fig. S5b), 64% of the co-aggregation pattern was observed at a distance equal or less than 10 μm, in which the maximal frequency of co-aggregation was captured. We observed that at 14 dpi, a high percentage of bacterial pairs (66.6%) co-aggregated up to 10 μm, in comparison to 53.1% at 7 dpi (Fig. 7d, F1,71 = 17.79, p \< 0.05). Although no differences were observed between S2 and S3 (F1,71 = 2.57, p = 0.11), we noticed that the initial variation in co-aggregation distances in S3 was markedly higher compared to S2 after 7 days (Fig. 7e). After 14 days, the variation in co-aggregation distances in S3 decreased and was comparable to S2 treatments.
-
-Our results indicate that the low co-aggregation and increased randomness observed in more complex communities are only transitional, as from 7 to 14 dpi, co-aggregation between pairs in presence of a third strain are comparable to conditions where only these pairs were present in the phyllosphere.
 
 ```{r plot_sup_freq_all, include=FALSE}
 fractions_pairs <- fractions %>% 
