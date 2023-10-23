@@ -22,7 +22,7 @@ H_syncom_summary <- coordinates %>%
     tally() %>% 
     pivot_wider(id_cols=c(syncom, exp, dpi, img), names_from = channel, values_from = n, values_fill = 0) %>% 
     mutate(rep = paste(syncom,dpi,exp,img, sep = "_"))
-reord_index <- match(H_syncom$rep, H_syncom_summary$rep)
+reord_index <- match(row.names(H_syncom), H_syncom_summary$rep)
 H_syncom_summary <- H_syncom_summary[reord_index,]
 
 # Add attributes to the hyperframe

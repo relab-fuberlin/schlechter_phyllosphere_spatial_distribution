@@ -1,0 +1,263 @@
+---
+title: 'Spatial distribution - Section 4'
+author: "Rudolf Schlechter"
+output: 
+    html_document:
+        df_print: paged
+        keep_md: yes
+    pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align = 'center', dpi = 300, cache = TRUE)
+options(digits = 2, scipen = 1, pillar.signif = 3)
+
+library(here)
+library(tidyverse)
+source(here('code', 'libraries_syncom.R'))
+source(here('code', 'palette_syncom.R'))
+source(here('code', 'theme_rs_spatial.R'))
+library(rstatix)
+
+#Data
+source(here('code', 'auc_pcf_fractions.R'))
+source(here('code', 'function_fractional_change_median.R'))
+auc_fold_change <- auc_fold_change %>% 
+    mutate(taxa_type = case_when(
+        taxa_pair == "MM" | taxa_pair == "SS" ~ "within",
+        taxa_pair == "MS" ~ "between"))
+auc_aggregation <- auc_fold_change %>% filter(type == "aggregate_fraction")
+
+
+set.seed(19900725)
+```
+
+### Effect of community complexity on interspecific spatial correlations
+
+We investigated the effect of community complexity on the spatial patterns between pairs of species (interspecific interactions). Pair cross correlations, $\hat{g}$(r), indicated whether an aggregated, random, or regular pattern was detected at a given distance (Fig. XXa, Fig. SXX). Frequencies were then determined from all replicates and the area under the curve was used as a measure to compare a spatial pattern of pairs of species in S3 relative to S2.
+
+```{r analysis_type}
+## Summary
+summary_type <- fractional_change_median(auc_fold_change, group = "type")
+
+## Kruskal-Wallis
+kw_type <- auc_fold_change %>% 
+    kruskal_test(fractional_change ~ type) %>% 
+    mutate(
+        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
+        p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
+
+kw_eff_type <- auc_fold_change %>% 
+    kruskal_effsize(fractional_change ~ type, ci=TRUE, nboot=100)
+
+## Dunn's test
+dunn_type <- auc_fold_change %>% 
+    dunn_test(fractional_change ~ type, p.adjust.method = "holm")
+
+## One-sample Wilcoxon test
+w1_type <-  auc_fold_change %>% 
+    group_by(type) %>% 
+    wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
+    select(type, estimate, statistic, p) %>% 
+    mutate(
+        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
+        p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
+
+```
+
+In general terms, pairs of species aggregated in S2 communities at each sampling point (Fig. XXA, Fig. SXX). The presence of a third strain decreased these aggregation frequencies, and consequently, regularity and randomness also changed in S3 (pair + one extra species) compared to the pairs alone (Kruskal-Wallis, *H*(`r kw_type$df`) = `r kw_type$statistic`, *p* `r kw_type$p_label`). Aggregation and regularity decreased in `r summary_type$percentage[summary_type$type=="aggregate_fraction"]` and `r summary_type$percentage[summary_type$type=="regular_fraction"]`%, respectively, while randomness was `r summary_type$percentage[summary_type$type=="random_fraction"]`% higher.
+
+```{r analysis_dpi}
+## Summary
+summary_dpi <- fractional_change_median(auc_fold_change, group=c("dpi", "type"))
+
+## One sample Wilcoxon test
+w1_dpi = auc_fold_change %>% 
+    group_by(dpi, type) %>% 
+    wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
+    select(dpi, type, estimate, statistic, p) %>% 
+    mutate(
+        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
+        p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
+
+## Two samples Wilcoxon test
+w2_dpi <- auc_fold_change %>% 
+    group_by(type) %>% 
+    wilcox_test(fractional_change ~ dpi, p.adjust.method = "holm", detailed=TRUE)
+```
+
+To further dissect these differences, we grouped the species pairs based on their identity, as a pair was composed of either two methylobacteria (MM), a methylobacterium and a sphingomonad (MS), or two sphingomonads (SS). We noticed that randomness was high at 7 dpi for pairs belonging to an S3 community (One-sample Wilcox, *W* = `r w1_dpi$statistic[w1_dpi$type=="random_fraction" & w1_dpi$dpi=="07dpi"]`, *p* `r w1_dpi$p_label[w1_dpi$type=="random_fraction" & w1_dpi$dpi=="07dpi"]`), and this increase was associated with pairs of species containing at least one *Methylobacterium* species (MM and MS) (Fig. XXB). However, this randomness decreased over time and became comparable to S2 at 14 dpi. The decrease in aggregation was only observed in MM pairs at 14 dpi. By contrast, pairs composed of only *Sphingomonas* species (SS) were not different between S2 and S3.
+
+Our results indicate that *Methylobacterium* species are more susceptible than *Sphingomonas* to changes in their spatial distribution depending on their community context. The pairs containing at least one *Methylobacterium* were randomly distributed in more complex communities initially.
+
+```{r analysis_taxa_strain}
+## One sample Wilcoxon test for taxa pairs
+w1_taxa <-  auc_fold_change %>% 
+    group_by(dpi, type, taxa_pair) %>% 
+    wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
+    select(dpi, type, taxa_pair, estimate, statistic, p) %>% 
+    mutate(
+        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
+        p_label = case_when(p < 0.05 ~ "*", TRUE ~ ""))
+w1_taxa %>% filter(p_label == "*")
+
+## Kruskal-Wallis test for taxa pairs
+kw_taxa <- auc_fold_change %>% 
+    group_by(type, dpi) %>% 
+    kruskal_test(fractional_change ~ taxa_pair)
+
+dunn_taxa <- auc_fold_change %>% 
+    group_by(type, dpi) %>% 
+    dunn_test(fractional_change ~ taxa_pair, p.adjust.method = "holm", detailed = TRUE) %>% 
+    filter(p.adj < 0.05)
+
+## Two samples Wilcoxon  test for taxa pairs over time
+w2_dpi_taxa <- auc_fold_change %>% 
+    group_by(type, taxa_pair) %>% 
+    wilcox_test(fractional_change ~ dpi, p.adjust.method = "holm", detailed = TRUE)
+
+```
+
+```{r, include = FALSE}
+## Kruskal Wallis test for strain pairs
+kw_strain <- auc_fold_change %>% 
+    group_by(type, dpi) %>% 
+    kruskal_test(fractional_change ~ strain_pair)
+
+dunn_strain <- auc_fold_change %>% 
+    group_by(type, dpi) %>% 
+    dunn_test(fractional_change ~ strain_pair, p.adjust.method = "holm", detailed = TRUE) %>% 
+    select(dpi, type, group1, group2, p, p.adj, p.adj.signif)
+
+## Two samples Wilcoxon test for strain pairs
+w2_strain <- auc_fold_change %>% 
+    group_by(type, dpi) %>% 
+    wilcox_test(fractional_change ~ strain_pair, p.adjust.method = "holm", detailed = TRUE)
+w2_strain %>% filter(p.adj < 0.05)
+
+## One sample Wilcoxon test for strain pairs
+w1_strain  <-  auc_fold_change %>% 
+    group_by(dpi, strain_pair, type) %>% 
+    wilcox_test(fractional_change ~ 1, mu = 0, p.adjust.method = "holm", detailed = TRUE) %>% 
+    select(dpi, strain_pair, type, estimate, statistic, p) %>% 
+    mutate(
+        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
+        p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
+w1_strain %>% filter(p < 0.05)
+```
+
+```{r, include = FALSE}
+## Kruskal Wallis test for  Syncom
+kw_syncom <- auc_fold_change %>% 
+    group_by(type, dpi) %>% 
+    kruskal_test(fractional_change ~ syncom)
+
+## Two samples Wilcoxon test for SynCom
+w2_syncom <- auc_fold_change %>% 
+    group_by(type, dpi) %>% 
+    wilcox_test(fractional_change ~ syncom, p.adjust.method = "holm", detailed = TRUE) %>% 
+    filter(p.adj < 0.05)
+
+## One sample Wilcoxon test for SynCom
+w1_syncom <-  auc_fold_change %>% 
+    group_by(dpi, type, syncom) %>% 
+    wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
+    select(dpi, type, syncom, estimate, statistic, p) %>% 
+    mutate(
+        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
+        p_label = case_when(p < 0.05 ~ "*", TRUE ~ as.character(p)))
+w1_syncom %>% filter(p_label == "*")
+```
+
+```{r, include = FALSE}
+plt.frq <- fractions %>% 
+    group_by(taxa_pair, synID, dpi, type, r) %>% 
+    summarise(mean_fraction = mean(fraction), .groups="drop") %>% 
+    mutate(index = case_when(
+        type == "regular_fraction" ~ 1,
+        type == "random_fraction" ~ 2,
+        type == "aggregate_fraction" ~ 3)) %>% 
+    ggplot(aes(x=r, y=mean_fraction))+
+    facet_nested(taxa_pair ~ dpi + synID, 
+                 nest_line = element_line(color="black"),
+                 labeller = labeller(dpi = dpi.lab2))+
+    geom_area(aes(fill=fct_reorder(type, index)), color = "black")+
+    scale_x_continuous(name = expression(paste("Distance, ", italic(r), " (", mu,"m)")), 
+                       expand = c(0,0), limit=c(0.2,30), breaks = seq(5, 25, 10))+
+    scale_y_continuous(name = expression(paste("Relative frequency of g(", italic(r),")")), 
+                       expand = c(0,0), breaks = seq(0,1,0.5))+
+    scale_fill_manual(name = "Spatial Pattern", labels = pattern.lab, values = pattern.pal)+
+    theme_rs()+
+    theme(
+          panel.spacing.x = grid::unit(0.5, "line"),
+          strip.text.x = element_text(margin = margin(b = 1, t = 5), face = "plain"),
+          strip.text.y = element_text(angle=0, vjust = 0.5, hjust = 0, face = "plain"),
+          legend.position = "bottom")
+
+plt.pattern <- left_join(auc_fold_change, w1_taxa, by = c("dpi", "type", "taxa_pair")) %>% 
+    mutate(index = case_when(
+        type == "regular_fraction" ~ 1,
+        type == "random_fraction" ~ 2,
+        type == "aggregate_fraction" ~ 3)) %>% 
+    ggplot(aes(taxa_pair, fractional_change))+
+    geom_text(aes(y=2.5, label=p_label), size = 5, parse=FALSE)+
+    facet_grid(dpi ~ fct_reorder(type, index), labeller = labeller(.rows = dpi.lab2, .cols = pattern.lab))+
+    geom_jitter(color = "black", stroke = 0.5, width = 0.1, alpha = 0.8)+
+    geom_boxplot(fill="white", alpha = 0.5, width = 0.2, outlier.alpha = 0)+
+    geom_hline(yintercept = 0, linetype = "dashed")+
+    theme_rs()+
+    theme(strip.text = element_text(face = "plain"))+
+    labs(x = "Taxa pair", y = "Fractional change")
+
+```
+
+```{r figure_main_6, fig.id=TRUE, dev = "png", fig.dim=c(5,8)}
+plt.frq / wrap_elements(plot = plt.pattern) + 
+    plot_annotation(tag_levels = "A") &
+    theme(legend.box.just = "center",
+          plot.margin = margin(0,1,0,1))
+```
+
+
+```{r plot_sup_freq_all, include=FALSE}
+fractions_pairs <- fractions %>% 
+    group_by(strain_pair, syncom, synID, dpi, type, r) %>% 
+    summarise(mean_fraction = mean(fraction), .groups="drop") %>% 
+    mutate(index = case_when(
+        type == "regular_fraction" ~ 1,
+        type == "random_fraction" ~ 2,
+        type == "aggregate_fraction" ~ 3))
+
+freq_plots <- function(name){
+    plt <- fractions_pairs %>% 
+        filter(strain_pair == name) %>% 
+        ggplot(aes(x=r, y=mean_fraction))+
+        facet_nested(synID + syncom ~ dpi, 
+                     nest_line = element_line(color="black"),
+                     labeller = labeller(dpi=dpi.lab2))+
+        geom_area(aes(fill=fct_reorder(type, index)), color = "black")+
+        scale_x_continuous(name = expression(paste("Distance, ", italic(r), " (", mu,"m)")), 
+                           expand = c(0,0), limit=c(0.2,30), breaks = seq(10, 20, 10))+
+        scale_y_continuous(name = expression(paste("Relative frequency of g(", italic(r),")")), 
+                           expand = c(0,0), breaks = seq(0,1,0.5))+
+        scale_fill_manual(name = "Spatial Pattern", labels = pattern.lab, values = pattern.pal)+
+        theme_rs()+
+        labs(title = pair.lab[name])+
+        theme(panel.spacing.x = grid::unit(0.5, "line"),
+              panel.spacing.y = grid::unit(1, "line"),
+              strip.text = element_text(angle=0, vjust = 0.5, hjust = 0, 
+                                          margin = margin(r = 5, l = 2), face = "plain"))
+    return (plt)
+}
+
+list_plot <- unique_pair %>% 
+    map(~freq_plots(.x))
+
+```
+
+```{r figure_supplemental_6, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots g", dev = "png", fig.dim=c(16,8)}
+wrap_plots(list_plot, ncol = 5, guides = "collect")+
+    plot_annotation(tag_levels = "A")
+```

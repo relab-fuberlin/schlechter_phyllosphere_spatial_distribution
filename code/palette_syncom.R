@@ -18,10 +18,10 @@ names(dpi.lab2) <- c("07dpi", "14dpi")
 pattern.lab = c("Aggregated", "Random", "Regular")
 names(pattern.lab) <- c("aggregate_fraction", "random_fraction", "regular_fraction")
 
-pair.lab = c("MeL85-MeL92", "MeL85-Mr0-1", "MeL92-Mr0-1", "SmFR1-SpFA2",
-              "MeL85-SmFR1", "MeL85-SpFA2", "MeL92-SmFR1", "MeL92-SpFA2", "Mr0-1-SmFR1", "Mr0-1-SpFA2")
-names(pair.lab) = c('meth85_meth92', 'meth85_mr01', 'meth92_mr01','smfr1_spfa2',
-                     'meth85_smfr1', 'meth85_spfa2', 'meth92_smfr1', 'meth92_spfa2','mr01_smfr1','mr01_spfa2')
+unique_pair <- c("meL85.smfr1", "meL85.spfa2", "meL85.meL92", "meL85.mr01", "meL92.smfr1", "meL92.spfa2", "meL92.mr01", "mr01.smfr1", "mr01.spfa2", "smfr1.spfa2")
+
+pair.lab = c("MeL85-SmFR1", "MeL85-SpFA2", "MeL85-MeL92", "MeL85-Mr0-1", "MeL92-SmFR1", "MeL92-SpFA2", "MeL92-Mr0-1", "Mr0-1-SmFR1", "Mr0-1-SpFA2", "SmFR1-SpFA2")
+names(pair.lab) = unique_pair
 
 plt_bac_density_lab = bquote('Bacterial density ['*log[10]~ "CFU g" ~ FW^-1 *"]")
 plt_bac_cell_density_lab = bquote('Bacterial cell density ['*log[10]~ "cell" ~ cm^-2 *"]")

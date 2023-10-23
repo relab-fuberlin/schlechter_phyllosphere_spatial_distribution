@@ -21,27 +21,12 @@ source(here('code', 'theme_rs_spatial.R'))
 library(rstatix)
 
 #Data
-source(here('code', 'auc_fractions.R'))
+source(here('code', 'auc_K_fractions.R'))
+source(here('code', 'function_fractional_change_median.R'))
 auc_aggregation <- auc_fold_change %>% filter(type == "aggregate_fraction")
 
 set.seed(19900725)
 ```
-
-```{r function_median}
-fractional_change_median = function(df, var="fractional_change", group=NULL){
-    summary <- df %>% 
-        group_by(!!!syms(group)) %>% 
-        summarise(median = median(!!!syms(var)),
-                  q1 = format(round(quantile(!!!syms(var), 0.25), 2), nsmall = 2),
-                  q3 = format(round(quantile(!!!syms(var), 0.75), 2), nsmall = 2),
-                  IQR = paste0(q1,"-(",q3,")", sep=''),
-                  percentage = abs(100*median),
-                  .groups = "drop")
-    
-    return(summary)
-}
-```
-
 
 ## Effect of community complexity on intraspecific spatial relations
 
