@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 
+# Data processing cell coordinates
+# Load the appropriate libraries
 library(tidyverse)
 
 # Area in cm2
