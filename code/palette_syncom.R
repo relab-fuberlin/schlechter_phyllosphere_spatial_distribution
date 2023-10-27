@@ -1,4 +1,6 @@
 ##  Palette SynCom spatial distribution paper
+library(RColorBrewer)
+library(wesanderson)
 
 ##    labels
 sp.lab = c("MeL85", "MeL92", "Mr0-1", "SmFR1", "SpFA2")

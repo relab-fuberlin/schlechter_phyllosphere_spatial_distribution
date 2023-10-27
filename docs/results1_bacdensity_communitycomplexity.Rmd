@@ -14,9 +14,18 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE, fig.align='center', dpi = 300, cache = TRUE)
 options(digits = 2, scipen = 1, pillar.signif = 3)
 
+# Libraries
 library(here)
+library(tidyverse)
+library(car)
+library(rstatix)
 
-source(here('code', 'libraries_syncom.R'))
+# Plotting 
+library(ggdist)
+library(ggpubr)
+library(patchwork)
+
+# Other dependencies
 source(here('code', 'palette_syncom.R'))
 source(here('code', 'theme_rs_spatial.R'))
 source(here('code', 'dunnet_function.R'))
@@ -28,7 +37,7 @@ set.seed(19900725)
 ## Taxon-specific population density changes correlate with community complexity
 
 ```{r import_data, include=FALSE}
-data_cfu <- read.csv(here("results/cfu_data_processed.csv")) %>% 
+data_cfu <- read.csv(here("results", "cfu_data_processed.csv")) %>% 
     na.omit %>% 
     mutate(dpi = factor(dpi),
            synID = factor(synID),
@@ -54,36 +63,56 @@ We first investigated the effect of community complexity on bacterial population
 
 We used non-parametric methods to analyse the CFU data, considering violation of normality (Shapiro-Wilk test, *W* = `r cfu_normality$statistic`, *p* = `r cfu_normality$p.value`) and homogeneity of variance (Breusch-Pagan test, $\ X^{2}$ = `r cfu_homoskedasticity$ChiSquare`, *p* = `r cfu_homoskedasticity$p`)
 
+
 ```{r cfu_analysis_synID}
 # Kruskal-Wallis test and effect size for community complexity (synID)
-kw_synID = kruskal.test(cfu_log ~ synID, data_cfu) %>% tidy %>% 
-    mutate(p_label = case_when(p.value < 0.05 ~ "< 0.05", TRUE ~ as.character(p.value)))
-keff_synID = kruskal_effsize(formula = cfu_log ~ synID, data = data_cfu, ci=TRUE, nboot=100)
+kw_synID = data_cfu %>% 
+    kruskal_test(cfu_log ~ synID) %>% 
+    mutate(p_label = case_when(
+        p < 0.05 ~ "< 0.05", 
+        TRUE ~ as.character(p)))
+
+keff_synID = data_cfu %>% 
+    kruskal_effsize(cfu_log ~ synID, nboot=100)
 
 # Dunn's Test
-dunn_synID = dunn_test(cfu_log ~ synID, p.adjust.method = "holm", data=data_cfu) %>% tibble %>% 
-    mutate(p_label = case_when(p.adj < 0.05 ~ "< 0.05", TRUE ~ as.character(p.adj)))
+dunn_synID = data_cfu %>% 
+    dunn_test(cfu_log ~ synID, p.adjust.method = "holm") %>% 
+    mutate(p_label = case_when(
+        p.adj < 0.05 ~ "< 0.05", 
+        TRUE ~ as.character(p.adj)))
 
 # Fold change of population density by SynCom complexity (synID)
 fc_cfu_synID = data_cfu %>% 
+    # Group by SynCom (C, S2, S3)
     group_by(synID) %>% 
     summarise(median_cfu = median(cfu)) %>% 
+    # Calculate the fold change (FC) in relation to C
     mutate(FC = median_cfu/median_cfu[1],
            logFC = log2(FC))
 ```
 
-We tested how the community complexity influenced changes in individual bacterial populations. Community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(`r kw_synID$parameter`) = `r kw_synID$statistic`, *p* = `r kw_synID$p_label`, $\eta^{2}$(`r kw_synID$parameter`) = `r keff_synID$effsize` [`r keff_synID$conf.low`-`r keff_synID$conf.high`]). This was reflected as a significant `r fc_cfu_synID$FC[fc_cfu_synID$synID=="S2"]`-fold increase in population densities composed of two-species communities (*W* = `r abs(dunn_synID$statistic[1])`, *p* `r dunn_synID$p_label[1]`), and a pronounced `r (fc_cfu_synID$FC[fc_cfu_synID$synID=="S3"])^-1`-fold decrease in S3 (*W* = `r abs(dunn_synID$statistic[2])`, *p* `r dunn_synID$p_label[2]`), both compared to the near-isogenic control, C (Figure \@ref(fig:figure_main_3)).
+
+We tested how the community complexity influenced changes in individual bacterial populations. Community complexity had a large effect on bacterial populations (Kruskal-Wallis, *H*(`r kw_synID$parameter`) = `r kw_synID$statistic`, *p* = `r kw_synID$p_label`, $\eta^{2}$(`r kw_synID$parameter`) = `r keff_synID$effsize` [`r keff_synID$conf.low`-`r keff_synID$conf.high`]). This was reflected as a significant `r fc_cfu_synID$FC[fc_cfu_synID$synID=="S2"]`-fold increase in population densities composed of two-species communities (*W* = `r abs(dunn_synID$statistic[1])`, *p* `r dunn_synID$p_label[1]`), and a pronounced `r (fc_cfu_synID$FC[fc_cfu_synID$synID=="S3"])^-1`-fold decrease in S3 (*W* = `r abs(dunn_synID$statistic[2])`, *p* `r dunn_synID$p_label[2]`), both compared to the near-isogenic control, C (Figure).
+
 
 ```{r cfu_analysis_dpi}
 # Wilcoxon test and effect size for sampling time (dpi)
-w_dpi = wilcox.test(formula = cfu_log ~ dpi, data = data_cfu) %>% tidy %>% 
-    mutate(p_label = case_when(p.value < 0.05 ~ "< 0.05", TRUE ~ as.character(p.value)))
-weff_dpi = wilcox_effsize(formula = cfu_log ~ dpi, data = data_cfu, ci=TRUE, nboot=100)
+w_dpi = data_cfu %>% 
+    wilcox_test(formula = cfu_log ~ dpi) %>% 
+    mutate(p_label = case_when(
+        p < 0.05 ~ "< 0.05", 
+        TRUE ~ as.character(p)))
+
+weff_dpi = data_cfu %>% 
+    wilcox_effsize(formula = cfu_log ~ dpi, ci=TRUE, nboot=100)
 
 # Fold change of population density by time of sampling (dpi)
 fc_cfu_dpi = data_cfu %>% 
+    # Group by day (7, 14 dpi)
     group_by(dpi) %>% 
     summarise(median_cfu = median(cfu)) %>% 
+    # Calculate the fold change (FC) in relation to 7 dpi
     mutate(FC = median_cfu/median_cfu[1],
            logFC = log2(FC))
 ```
@@ -92,19 +121,28 @@ Changes in population density could be related to temporal changes. Thus, we eva
 
 ```{r cfu_analysis_taxa}
 # Wilcoxon test and effect size for bacterial group (taxa)
-w_taxa = wilcox.test(formula = cfu_log ~ taxa, data = data_cfu) %>% tidy %>% 
-    mutate(p_label = case_when(p.value < 0.05 ~ "< 0.05", TRUE ~ as.character(p.value)))
-weff_taxa = wilcox_effsize(formula = cfu_log ~ taxa, data = data_cfu, ci=TRUE, nboot=100)
+w_taxa = data_cfu %>% 
+    wilcox_test(formula = cfu_log ~ taxa) %>% 
+    mutate(p_label = case_when(
+        p < 0.05 ~ "< 0.05", 
+        TRUE ~ as.character(p)))
+
+weff_taxa = data_cfu %>% 
+    wilcox_effsize(formula = cfu_log ~ taxa, ci=TRUE, nboot=100)
 
 # Fold change of population density by bacterial group (taxa)
 fc_cfu_taxa = data_cfu %>% 
+    # Group by taxa (Sphingomonas, Methylobacterium)
     group_by(taxa) %>% 
     summarise(median_cfu = median(cfu)) %>% 
+    # Calculate the fold change (FC) in relation to Methylobacterium
     mutate(FC = median_cfu/median_cfu[1],
            logFC = log2(FC))
 ```
 
 ```{r, include=FALSE}
+## Fold change and Dunn tests for two variables
+
 ## Variables
 explanatory = "synID"
 taxa_dpi = c("taxa", "dpi")
@@ -199,7 +237,11 @@ plt3.c <- inner_join(dunntest_strain_dpi, fold_strain_dpi, by = c("strain", "dpi
 
 ```{r figure_main_3, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere", dev = "png", fig.dim=c(7,5)}
 areas <- c(patchwork::area(1,1,3), patchwork::area(1,2,1), patchwork::area(2,2,3))
-wrap_elements(full = plt3.a) + plt3.b + plt3.c  + plot_annotation(tag_levels = "A") + plot_layout(design = areas, guides = "collect") & theme(legend.box.just = "center")
+wrap_elements(plot = plt3.a) + plt3.b + plt3.c  + 
+    plot_annotation(tag_levels = "A") + 
+    plot_layout(design = areas, guides = "collect") & 
+    theme(legend.box.just = "center")
+ggsave(here("results", "plot_cfu.png"), width = 7, height = 5)
 ```
 
 ```{r figure_sup_1_setup, include=FALSE}
@@ -255,20 +297,24 @@ data_fold_S3 = data_fold %>%
     pivot_wider(id_cols=c(strain, dpi), names_from = syncom, values_from=fold) %>% 
     arrange(strain)
 
+# Plot
 plt.sup1 = cbind(data_fold_S2, data_fold_S3[,c(-1:-2)]) %>% 
     pivot_longer(cols = -c(strain,dpi)) %>% 
     ungroup %>% 
-    arrange(dpi,strain) %>% 
-    mutate(index = seq(1:nrow(.))) %>% 
+    mutate(label = if_else(grepl("S3.*", name), "S3", "S2"),
+           index = seq(1:nrow(.))) %>% 
     left_join(., dunn_test_long, by = c("strain", "dpi", "name")) %>% 
-    ggplot(aes(y=strain, x=fct_reorder(name, index)))+
-    facet_wrap(~dpi, ncol=1, labeller = labeller(dpi=dpi.lab2))+
-    geom_tile(colour= "black", fill= "white", linewidth = 0.1)+
+    ggplot(aes(y = strain, x = fct_reorder(name, index)))+
+    facet_grid(dpi~label, labeller = labeller(dpi = dpi.lab2), scales = "free_x")+
+    geom_tile(colour = "black", fill = "white", linewidth = 0.1)+
     geom_point(aes(fill = value, size = p_size), shape = 21)+
-    scale_fill_gradientn(name = bquote(Log[2]~"FC"), colours = wes_palette("Zissou1")[c(1,2,3,5,5)], values = c(0,0.57,1), limits=c(-10,8), breaks=seq(-8,4,4), na.value = 'grey90')+
-    scale_size_continuous(range = c(10,1), breaks = c(0.05, 0.5, 1), 
-                          label = c("< 0.05", "0.5", "1.0"), name = expression(paste(italic("P"), "-adjusted")))+
-    coord_fixed()+
+    scale_fill_gradientn(name = bquote(Log[2]~"FC"), 
+                         colours = wes_palette("Zissou1")[c(1,2,3,5,5)], 
+                         values = c(0,0.57,1), limits=c(-10,8), 
+                         breaks=seq(-8,4,4), na.value = 'grey90')+
+    scale_size_continuous(range = c(10,3), breaks = c(0.05, 0.5, 1), 
+                          label = c("< 0.05", "0.5", "1.0"), 
+                          name = expression(paste(italic("P"), "-adjusted")))+
     scale_y_discrete(name="Focal strain", labels = sp.lab)+
     scale_x_discrete(name="Competitor(s)", labels = sp.lab)+
     theme_rs()+
@@ -277,8 +323,8 @@ plt.sup1 = cbind(data_fold_S2, data_fold_S3[,c(-1:-2)]) %>%
           strip.text = element_text(face="plain"))
 ```
 
-```{r figure_sup_1, warning=FALSE, dev = "png", fig.dim=c(7,5)}
+```{r figure_sup_1, warning=FALSE, dev = "png", fig.dim=c(10,5)}
 plt.sup1
+ggsave(here("results", "plot_cfu_sup.png"), width = 10, height = 5)
 ```
-
 

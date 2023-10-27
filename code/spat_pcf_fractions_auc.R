@@ -1,16 +1,18 @@
-## K AREA UNDER THE CURVE
+#!/usr/bin/env Rscript 
+
+##  Area under the curve spatial patterns frequency plots from PCF
+#   Load required libraries
+library(here)
 library(tidyverse)
 library(DescTools)
 
 # Load data
 fractions <- read.csv(here('results', 'stat_pcf_fractions.csv'), header = TRUE, row.names = "X") %>% 
     tibble %>% 
-    separate(col='syncom', into=c('synID', 'synC'), sep = '\\.', remove = FALSE) %>% 
+    separate(col='syncom', into = c('synID', 'synC'), sep = '\\.', remove = FALSE) %>% 
     select(-synC) %>% 
     mutate(taxa_pair = case_when(
-        strain_pair == "meL85.meL92" | 
-            strain_pair == "meL85.mr01" |
-            strain_pair == "meL92.mr01" ~ "MM",
+        strain_pair == "meL85.meL92" | strain_pair == "meL85.mr01" | strain_pair == "meL92.mr01" ~ "MM",
         strain_pair == "smfr1.spfa2" ~ "SS",
         TRUE ~ "MS"))
 

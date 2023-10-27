@@ -1,13 +1,28 @@
 #!/usr/bin/env Rscript
 
 # Data processing CFU data
-source(here('code', 'libraries_syncom.R'))
+# Load the required libraries
+library(here)
+library(tidyverse)
 
-cfu_data = read.csv(here("data/cfu.csv")) %>% 
+# Check command line arguments
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) != 2) {
+    stop("You must provide three command line arguments: [1] input directory and 
+         [2] output directory")
+}
+
+# Check the output directory and CFU directory from command line arguments
+input <- args[1]
+outdir <- args[2]
+
+# Read data
+cfu_data = read.csv(here(input, "cfu.csv")) %>% 
     mutate(cfu_log = log10(cfu),
            sample = factor(sample))
 
-write.csv(cfu_data, here("results/cfu_data_processed.csv"), row.names=FALSE)
+# Export data
+write.csv(cfu_data, here(outdir, "data_processed.csv"), row.names = FALSE)
 
 # Summary data
 cfu_data %>% 
@@ -16,7 +31,7 @@ cfu_data %>%
               sd = sd(cfu_log),
               cv = sd/mean*100,
               .groups = "drop") %>% 
-    write.csv(here("results/cfu_data_summary.csv"), row.names=FALSE)
+    write.csv(here(outdir, "cfu_data_summary.csv"), row.names=FALSE)
 
 # Total CFU per sample
 cfu_data %>% 
@@ -24,4 +39,4 @@ cfu_data %>%
     summarise(cfu_total = sum(cfu),
               log_total = log10(cfu_total),
               .groups = "drop") %>% 
-    write.csv(here("results/cfu_total.csv"), row.names=FALSE)
+    write.csv(here(outdir, "cfu_total.csv"), row.names=FALSE)

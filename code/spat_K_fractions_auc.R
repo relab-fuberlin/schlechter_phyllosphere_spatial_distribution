@@ -1,9 +1,14 @@
-## K AREA UNDER THE CURVE
+#!/usr/bin/env Rscript 
+
+##  Area under the curve spatial patterns frequency plots from K-estimates
+#   Load required libraries
+library(here)
+library(tidyverse)
 
 # Load data
 fractions <- read.csv(here('results', 'stat_K_fractions.csv'), header = TRUE, row.names = "X") %>% 
     tibble %>% 
-    separate(col='syncom', into=c('synID', 'synC'), sep = '\\.', remove = FALSE) %>% 
+    separate(col='syncom', into = c('synID', 'synC'), sep = '\\.', remove = FALSE) %>% 
     select(-synC) %>% 
     mutate(taxa = case_when(
         strain == "meL85" ~ "Methylobacterium",

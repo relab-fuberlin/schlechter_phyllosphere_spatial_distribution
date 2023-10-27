@@ -16,13 +16,13 @@ options(digits = 2, scipen = 1, pillar.signif = 3)
 
 library(here)
 library(tidyverse)
-source(here('code', 'libraries_syncom.R'))
-source(here('code', 'palette_syncom.R'))
-source(here('code', 'theme_rs_spatial.R'))
 library(rstatix)
 
+source(here('code', 'palette_syncom.R'))
+source(here('code', 'theme_rs_spatial.R'))
+
 #Data
-source(here('code', 'auc_pcf_fractions.R'))
+source(here('code', 'spat_pcf_fractions_auc.R'))
 source(here('code', 'function_fractional_change_median.R'))
 auc_fold_change <- auc_fold_change %>% 
     mutate(taxa_type = case_when(

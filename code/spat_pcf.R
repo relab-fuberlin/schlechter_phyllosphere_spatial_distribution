@@ -1,14 +1,15 @@
+#!/usr/bin/env Rscript 
+
 ##  Pair correlation analysis
-
-#   Set seed
-set.seed(19900725)
-
-#   Dependencies
+#   Load required libraries
 library(here)
 library(spatstat)
 library(tidyverse)
 source(here('code', 'function_pcf.R')) # Custom PCF function
 source(here('code', 'palette_syncom.R'))
+
+#   Set seed
+set.seed(19900725)
 
 #   Data
 H <- readRDS(here('results', 'hyperframe_syncom.rds')) # Read hyperframe
