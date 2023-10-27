@@ -1,8 +1,12 @@
+#!/usr/bin/env Rscript
 
+# Test for spatial homogeneity
+# Load the required libraries
 library(spatstat)
 library(tidyverse)
 library(here)
 
+#  Set seed
 set.seed(19900725)
 
 # Chi-square test
@@ -13,7 +17,7 @@ unit <- "micron"
 W <- owin(xrange, yrange, unitname=unit)
 formula_syncom <- "~syncom + dpi + exp + img"
 
-# Read coordinates file
+# Read coordinates file and create a hyperframe
 coordinates <- readRDS(here('results', 'coordinates.rds'))
 clist <- split(coordinates, as.formula(formula_syncom), sep="_")
 clist <- lapply(clist, na.omit)
@@ -37,15 +41,14 @@ H$sum = H$C0 + H$C1 + H$C2
 H2 <- H[H$sum > 10]
 subsample_H <- H2[sample(nrow(H2), size=500, replace = FALSE),]
 
-# test wrong model
-fit0 <- mppm(coord ~ 1, subsample_H)
-cdf_fit0 <- cdf.test(fit0, "x")
-write_rds(cdf_fit0, here('results', 'cdf_fit0.rds'))
-qt_fit0 <- quadrat.test(fit0, method = "MonteCarlo", nsim=999)
-write_rds(qt_fit0, here('results', 'quadrat_test_fit0.rds'))
-
+# Statistical test
+# Fit spatial data into a point procees model
 fit1 <- mppm(coord ~ id, subsample_H)
-cdf_fit1 <- cdf.test(fit1, "x")
-write_rds(cdf_fit1, here('results', 'cdf_fit0.rds'))
+
+# Run goodness-of-fit of a point process model
+cdf_fit1 <- cdf.test(fit1, "x", test = "ks")
+write_rds(cdf_fit1, here('results', 'cdf_fit1.rds'))
+
+# Run dispersion test for spatial point pattern based on quadrat counts
 qt_fit1 <- quadrat.test(fit0, method = "MonteCarlo", nsim=999)
-write_rds(qt_fit1, here('results', 'quadrat_test_fit0.rds'))
+write_rds(qt_fit1, here('results', 'quadrat_test_fit1.rds'))

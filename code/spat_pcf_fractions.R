@@ -1,7 +1,12 @@
-## Spatial K-estimate fractions
+#!/usr/bin/env Rscript 
+
+## Spatial PCF fractions
+#   Load required libraries
+library(here)
+library(tidyverse)
 
 #   Open file
-data <- readRDS(here('results', 'stat_K_inhom_table.rds'))
+data <- readRDS(here('results', 'stat_pcf_inhom_table.rds'))
 
 #   Calculate the fraction of each spatial pattern
 data %>%
@@ -9,7 +14,7 @@ data %>%
         aggregate = case_when(obs > hi ~ 1, TRUE ~ 0),
         regular = case_when(obs < lo ~ 1, TRUE ~ 0),
         random = case_when(obs < hi & obs > lo ~ 1, TRUE ~ 0)) %>% 
-    group_by(syncom, strain, dpi, r) %>% 
+    group_by(syncom, dpi, r, strain_pair) %>% 
     summarise(
         aggregate = sum(aggregate),
         regular = sum(regular),
@@ -24,8 +29,6 @@ data %>%
                  names_to = "type", 
                  values_to = "fraction", 
                  values_drop_na = TRUE) %>% 
-    select(syncom, strain, dpi, r, type, fraction) %>% 
-    mutate(strain = factor(strain),
-           dpi = factor(dpi),
-           type = factor(type, levels = c('regular_fraction', 'random_fraction', 'aggregate_fraction'))) %>% 
-    write.csv(here('results', 'stat_K_fractions.csv'))
+    select(syncom, dpi, r, strain_pair, type, fraction) %>% 
+    mutate(type = factor(type, levels = c('regular_fraction', 'random_fraction', 'aggregate_fraction'))) %>% 
+    write.csv(here('results', 'stat_pcf_fractions.csv'))

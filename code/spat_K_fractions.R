@@ -1,4 +1,9 @@
+#!/usr/bin/env Rscript
+
 ## Spatial K-estimate fractions
+#   Load required libraries
+library(here)
+library(tidyverse)
 
 #   Open file
 data <- readRDS(here('results', 'stat_K_inhom_table.rds'))

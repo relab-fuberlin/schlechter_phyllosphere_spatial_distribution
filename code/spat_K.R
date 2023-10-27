@@ -1,4 +1,9 @@
+#!/usr/bin/env Rscript 
+
 ##  K estimates
+# Load required libraries
+library(here)
+library(tidyverse)
 library(spatstat)
 
 #   Set seed
@@ -11,9 +16,6 @@ H_summary <- readRDS(here('results', 'hyperframe_strain_summary.rds'))
 ##Kest
 H_summary = H_summary[H_summary$n > 10,]
 H = H[H$n > 10,]
-
-K <- with(H, envelope(coord, Kest, correction ="Ripley", r=seq(0,30,0.2)))
-saveRDS(K, here('results', 'stat_K.rds'))
 
 K_inhom <- with(H, envelope(coord, Kinhom, correction ="Ripley", r=seq(0,30,0.2)))
 saveRDS(K_inhom, here('results', 'stat_K_inhom.rds'))
