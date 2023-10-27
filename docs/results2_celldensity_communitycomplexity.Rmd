@@ -18,15 +18,15 @@ options(digits = 2, scipen = 1, pillar.signif = 3)
 ## Data processing
 library(here)
 library(tidyverse)
+
 ## Stats
 library(rstatix)
 library(car)
+
 ## Data visualisation
 library(ggdist)
 library(ggpubr)
 library(patchwork)
-library(RColorBrewer)
-library(wesanderson)
 
 # Dependencies
 source(here('code', 'palette_syncom.R'))
@@ -53,7 +53,7 @@ We identified several archetypal patterns that follow the leaf surface topograph
 # Import and combine CFU and cell data
 data_cell <- read.csv(here("results", "cell_density.csv")) %>% 
     rename(sample = rep) %>% 
-    inner_join(., read.csv(here("results", "cfu_data_processed.csv")), 
+    inner_join(., read.csv(here("results", "data_processed.csv")), 
                by=c("exp", "dpi", "synID", "comID", "syncom", "strain", "sample", "channel")) %>% 
     mutate(dpi = factor(dpi),
            synID = factor(synID),
@@ -195,8 +195,10 @@ plt3.c <- inner_join(dunntest_strain, fold_strain, by = c("strain", "synID")) %>
 
 ```{r figure_main_5, fig.id=TRUE, fig.cap="Bacterial cell density in the arabidopsis phyllosphere", dev = "png", fig.dim=c(8,5)}
 areas <- c(patchwork::area(1,1,3), patchwork::area(1,2,1), patchwork::area(2,2,3))
-wrap_elements(full = plt3.a) + plt3.b + plt3.c  + 
+wrap_elements(plot = plt3.a) + plt3.b + plt3.c  + 
     plot_annotation(tag_levels = "A") + 
     plot_layout(guides = "collect", design = areas) & 
     theme(legend.box.just = "center")
+ggsave(here("results", "plot_cell.png"), width = 7, height = 5)
+
 ```
