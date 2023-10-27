@@ -1,6 +1,8 @@
 #!/usr/bin/env Rscript
 
 # Data processing cell coordinates
+# Load the appropriate libraries
+library(here)
 library(tidyverse)
 
 metadata = read_csv(here('data', 'comm_id.csv'))
