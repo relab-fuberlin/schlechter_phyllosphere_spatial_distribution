@@ -37,7 +37,7 @@ set.seed(19900725)
 ## Taxon-specific population density changes correlate with community complexity
 
 ```{r import_data, include=FALSE}
-data_cfu <- read.csv(here("results", "cfu_data_processed.csv")) %>% 
+data_cfu <- read.csv(here("results", "data_processed.csv")) %>% 
     na.omit %>% 
     mutate(dpi = factor(dpi),
            synID = factor(synID),
@@ -149,11 +149,15 @@ taxa_dpi = c("taxa", "dpi")
 strain_dpi = c("strain", "dpi")
 
 # Fold change of population density by taxa and dpi
-dunntest_taxa_dpi <- dun_func1(data_cfu, "cfu_log", taxa_dpi, explanatory) %>% rename(synID = group2)
+dunntest_taxa_dpi <- dun_func1(data_cfu, "cfu_log", taxa_dpi, explanatory) %>% 
+    mutate(symbol = ifelse(p_label == "< 0.05", "*", "")) %>% 
+    rename(synID = group2)
 fold_taxa_dpi <- fold_func1(data_cfu, "cfu", taxa_dpi, explanatory)
 
 # Fold change of population density by strain and dpi
-dunntest_strain_dpi <- dun_func1(data_cfu, "cfu_log", strain_dpi, explanatory) %>% rename(synID = group2)
+dunntest_strain_dpi <- dun_func1(data_cfu, "cfu_log", strain_dpi, explanatory) %>% 
+    mutate(symbol = ifelse(p_label == "< 0.05", "*", "")) %>% 
+    rename(synID = group2)
 fold_strain_dpi <- fold_func1(data_cfu, "cfu", strain_dpi, explanatory)
 ```
 
@@ -169,7 +173,9 @@ These results indicated that bacterial taxa differentially responded to communit
 # Plot CFU
 # Multiple comparisons
 plt.cfu.stat = dunn_synID %>% 
-    mutate(p.adj.signif = case_when(p.adj.signif == "****" ~ "*", TRUE ~ p.adj.signif), y.position = c(9,10,9.5))
+    mutate(p.adj.signif = case_when(
+        p.adj.signif == "****" ~ "*", 
+        TRUE ~ p.adj.signif), y.position = c(9,10,9.5))
 
 plt3.a <- data_cfu %>% 
     ggplot(aes(synID, cfu_log))+
@@ -198,55 +204,81 @@ plt3.a <- data_cfu %>%
 
 plt3.b <- inner_join(dunntest_taxa_dpi, fold_taxa_dpi, by = c("taxa", "dpi", "synID")) %>% 
     filter(group1 == "C") %>% 
-    ggplot(aes(x=synID, y=taxa))+
+    ggplot(aes(x = synID, y = taxa))+
     facet_wrap(~dpi, ncol=2, labeller = labeller(dpi=dpi.lab2))+
-    geom_tile(colour= "black", fill= "white", linewidth = 0.1)+
-    geom_point(aes(fill = log2FC, size = p_size), shape = 21)+
-    coord_fixed()+
-    scale_fill_gradientn(name = bquote(Log[2]~"FC"), colours = wes_palette("Zissou1")[c(1,2,3,5)], 
-                         values = c(0,0.55,1), limits=c(-8,4), breaks=seq(-8,4,4), na.value = 'grey90')+
-    scale_size_continuous(range = c(12,2), breaks = c(0.05, 0.5, 1), limits = c(0,1), 
-                          label = c("< 0.05", "0.5", "1.0"), name = expression(paste(italic("P"), "-adjusted")))+
+    geom_tile(aes(fill = log2FC), colour= "black")+
+    geom_text(aes(label=symbol), vjust = 0.77, size = 5)+
+    #geom_point(aes(fill = log2FC, stroke = p_size), size = 10, shape = 21, color = "grey10")+
+    coord_equal(ratio = 0.5)+
+    scale_fill_gradientn(name = bquote(Log[2]~"FC"), 
+                         colours = wes_palette("Zissou1")[c(1,2,3,5)], 
+                         values = c(0,0.55,1), 
+                         limits=c(-8,4), 
+                         breaks=seq(-8,4,4), 
+                         na.value = 'grey90')+
     scale_y_discrete(name="", labels = taxa.lab)+
     labs(x = "")+
     theme_rs()+
     theme(panel.border = element_blank(),
           axis.text.x = element_text(hjust=0.5, vjust=3),
           axis.text.y = element_text(face="italic"),
-          strip.text = element_text(face="plain"))
+          strip.text = element_text(face="plain"),
+          legend.position = "bottom")
 
-plt3.c <- inner_join(dunntest_strain_dpi, fold_strain_dpi, by = c("strain", "dpi", "synID")) %>% 
+
+plt3.c <- inner_join(dunntest_strain_dpi, 
+                     fold_strain_dpi, 
+                     by = c("strain", "dpi", "synID")) %>% 
     filter(group1 == "C") %>% 
-    ggplot(aes(x=synID, y=strain))+
+    ggplot(aes(x = synID, y = strain))+
     facet_wrap(~dpi, ncol=2, labeller = labeller(dpi=dpi.lab2))+
-    geom_tile(colour= "black", fill= "white", linewidth = 0.1)+
-    geom_point(aes(fill = log2FC, size = p_size), shape = 21)+
-    coord_fixed()+
-    scale_fill_gradientn(name = bquote(Log[2]~"FC"), colours = wes_palette("Zissou1")[c(1,2,3,5)], 
-                         values = c(0,0.55,1), limits=c(-8,4), breaks=seq(-8,4,4), na.value = 'grey90')+
-    scale_size_continuous(range = c(12,2), breaks = c(0.05, 0.5, 1), limits = c(0,1),
-                          label = c("< 0.05", "0.5", "1.0"), name = expression(paste(italic("P"), "-adjusted")))+
+    geom_tile(aes(fill = log2FC), colour= "black")+
+    geom_text(aes(label=symbol), vjust = 0.77, size = 5)+
+    #geom_point(aes(fill = log2FC, stroke = p_size), size = 10, shape = 21, color = "grey10")+
+    coord_equal(ratio = 0.5)+
+    scale_fill_gradientn(name = bquote(Log[2]~"FC"), 
+                         colours = wes_palette("Zissou1")[c(1,2,3,5)], 
+                         values = c(0,0.55,1), 
+                         limits=c(-8,4), 
+                         breaks=seq(-8,4,4), 
+                         na.value = 'grey90')+
     scale_y_discrete(name="Focal strain", labels = sp.lab)+
     scale_x_discrete(name="SynCom", labels = sp.lab)+
     theme_rs()+
     theme(panel.border = element_blank(),
-          axis.text.x = element_text(hjust=0.5, vjust=3),
-          strip.text = element_text(face="plain"))+
-    guides(size = "none", fill="none")
+          axis.text.x = element_text(hjust = 0.5, vjust = 3),
+          strip.text = element_text(face="plain"),
+          legend.position = "bottom")
 ```
 
 ```{r figure_main_3, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere", dev = "png", fig.dim=c(7,5)}
-areas <- c(patchwork::area(1,1,3), patchwork::area(1,2,1), patchwork::area(2,2,3))
-wrap_elements(plot = plt3.a) + plt3.b + plt3.c  + 
+
+areas <- c(patchwork::area(1,1,3), # A
+           patchwork::area(1,2,1), # B
+           patchwork::area(2,2,3), # C
+           patchwork::area(4,2,4)) # Legend
+plot(areas)
+
+wrap_elements(plot = plt3.a) + plt3.b + plt3.c + guide_area() +
     plot_annotation(tag_levels = "A") + 
-    plot_layout(design = areas, guides = "collect") & 
-    theme(legend.box.just = "center")
+    plot_layout(design = areas, 
+                guides = "collect",
+                widths = c(1.5, 1)) & 
+    theme(legend.box.just = "left",
+          legend.position = "bottom",
+          panel.spacing.x = unit(0.5, "lines"),
+          plot.margin = margin(1,5,1,5)) &
+    guides(fill = guide_colorbar(title.position="top", title.hjust = 0.5))
+
+# Save plot
 ggsave(here("results", "plot_cfu.png"), width = 7, height = 5)
+
 ```
 
 ```{r figure_sup_1_setup, include=FALSE}
 dunntest_syncom <- dun_func1(data_cfu, "cfu_log", c("strain", "dpi"), "syncom") %>% 
     separate(group1, into=c('synID', 'com')) %>% 
+    mutate(symbol = ifelse(p_label == "< 0.05", "*", "")) %>% 
     rename(syncom = group2) %>% 
     group_by(strain, dpi) %>% 
     filter(synID=="C") %>% 
@@ -255,19 +287,19 @@ dunntest_syncom <- dun_func1(data_cfu, "cfu_log", c("strain", "dpi"), "syncom") 
 dunn_S2 = dunntest_syncom %>% 
     separate(syncom, into = c('synID', 'com'), remove = FALSE) %>% 
     filter(synID == "S2") %>% 
-    select(syncom, dpi, strain, p_size) %>% 
+    select(syncom, dpi, strain, symbol) %>% 
     group_by(syncom, dpi) %>% 
-    mutate(to=rev(strain)) %>% 
+    mutate(to = rev(strain)) %>% 
     ungroup() %>% 
-    select(syncom, dpi, strain, to, p_size)
+    select(syncom, dpi, strain, to, symbol)
 
 dunn_test_long <- dunntest_syncom %>% 
     separate(syncom, into = c('synID', 'com'), remove = FALSE) %>% 
     filter(synID == "S3") %>% 
     mutate(to = syncom) %>% 
-    select(syncom, dpi, strain, to, p_size) %>% 
+    select(syncom, dpi, strain, to, symbol) %>% 
     rbind(dunn_S2,.) %>% 
-    select(dpi:p_size) %>% 
+    select(dpi:symbol) %>% 
     rename(name=to)
 
 data_median_control = data_cfu %>% 
@@ -305,26 +337,27 @@ plt.sup1 = cbind(data_fold_S2, data_fold_S3[,c(-1:-2)]) %>%
            index = seq(1:nrow(.))) %>% 
     left_join(., dunn_test_long, by = c("strain", "dpi", "name")) %>% 
     ggplot(aes(y = strain, x = fct_reorder(name, index)))+
-    facet_grid(dpi~label, labeller = labeller(dpi = dpi.lab2), scales = "free_x")+
-    geom_tile(colour = "black", fill = "white", linewidth = 0.1)+
-    geom_point(aes(fill = value, size = p_size), shape = 21)+
+    facet_grid(dpi~label, labeller = labeller(dpi = dpi.lab2), scales = "free_x", space = "free")+
+    geom_tile(aes(fill = value), colour= "black")+
+    geom_text(aes(label=symbol), vjust = 0.77, size = 5)+
     scale_fill_gradientn(name = bquote(Log[2]~"FC"), 
                          colours = wes_palette("Zissou1")[c(1,2,3,5,5)], 
                          values = c(0,0.57,1), limits=c(-10,8), 
                          breaks=seq(-8,4,4), na.value = 'grey90')+
-    scale_size_continuous(range = c(10,3), breaks = c(0.05, 0.5, 1), 
-                          label = c("< 0.05", "0.5", "1.0"), 
-                          name = expression(paste(italic("P"), "-adjusted")))+
     scale_y_discrete(name="Focal strain", labels = sp.lab)+
     scale_x_discrete(name="Competitor(s)", labels = sp.lab)+
     theme_rs()+
     theme(panel.border = element_blank(),
-          axis.text.x = element_text(angle=90, hjust=1, vjust=0.5),
-          strip.text = element_text(face="plain"))
+          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          strip.text = element_text(face = "plain"),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "bottom")+
+    guides(fill = guide_colorbar(title.position="top", title.hjust = 0.5))
+
 ```
 
 ```{r figure_sup_1, warning=FALSE, dev = "png", fig.dim=c(10,5)}
 plt.sup1
-ggsave(here("results", "plot_cfu_sup.png"), width = 10, height = 5)
+ggsave(here("results", "plot_cfu_sup.png"), width = 5, height = 4.5)
 ```
 
