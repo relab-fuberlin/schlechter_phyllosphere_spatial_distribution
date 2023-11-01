@@ -186,7 +186,7 @@ plt.frq <- fractions %>%
     geom_area(aes(fill=fct_reorder(type, index)), color = "black")+
     scale_x_continuous(name = expression(paste("Distance, ", italic(r), " (", mu,"m)")), 
                        expand = c(0,0), limit=c(0.2,30), breaks = seq(5, 25, 10))+
-    scale_y_continuous(name = expression(paste("Relative frequency of g(", italic(r),")")), 
+    scale_y_continuous(name = bquote("Relative frequency of"~hat(g)(italic(r))),
                        expand = c(0,0), breaks = seq(0,1,0.5))+
     scale_fill_manual(name = "Spatial Pattern", labels = pattern.lab, values = pattern.pal)+
     theme_rs()+
@@ -213,11 +213,16 @@ plt.pattern <- left_join(auc_fold_change, w1_taxa, by = c("dpi", "type", "taxa_p
 
 ```
 
-```{r figure_main_6, fig.id=TRUE, dev = "png", fig.dim=c(5,8)}
-plt.frq / wrap_elements(plot = plt.pattern) + 
+```{r figure_main_6, fig.id=TRUE, dev = "png", fig.dim=c(8,4)}
+# Set up plot
+plt.frq + wrap_elements(plot = plt.pattern) + 
     plot_annotation(tag_levels = "A") &
     theme(legend.box.just = "center",
           plot.margin = margin(0,1,0,1))
+
+# Save plot
+ggsave(here("results", "plot_g.png"), width = 10, height = 4)
+
 ```
 
 
@@ -233,14 +238,14 @@ fractions_pairs <- fractions %>%
 freq_plots <- function(name){
     plt <- fractions_pairs %>% 
         filter(strain_pair == name) %>% 
-        ggplot(aes(x=r, y=mean_fraction))+
+        ggplot(aes(x=r, y = mean_fraction))+
         facet_nested(synID + syncom ~ dpi, 
                      nest_line = element_line(color="black"),
                      labeller = labeller(dpi=dpi.lab2))+
         geom_area(aes(fill=fct_reorder(type, index)), color = "black")+
         scale_x_continuous(name = expression(paste("Distance, ", italic(r), " (", mu,"m)")), 
                            expand = c(0,0), limit=c(0.2,30), breaks = seq(10, 20, 10))+
-        scale_y_continuous(name = expression(paste("Relative frequency of g(", italic(r),")")), 
+        scale_y_continuous(name = bquote("Relative frequency of"~hat(g)(italic(r))),
                            expand = c(0,0), breaks = seq(0,1,0.5))+
         scale_fill_manual(name = "Spatial Pattern", labels = pattern.lab, values = pattern.pal)+
         theme_rs()+

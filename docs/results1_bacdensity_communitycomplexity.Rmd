@@ -205,16 +205,15 @@ plt3.a <- data_cfu %>%
 plt3.b <- inner_join(dunntest_taxa_dpi, fold_taxa_dpi, by = c("taxa", "dpi", "synID")) %>% 
     filter(group1 == "C") %>% 
     ggplot(aes(x = synID, y = taxa))+
-    facet_wrap(~dpi, ncol=2, labeller = labeller(dpi=dpi.lab2))+
+    facet_wrap(~dpi, ncol=2, labeller = labeller(dpi = dpi.lab2))+
     geom_tile(aes(fill = log2FC), colour= "black")+
     geom_text(aes(label=symbol), vjust = 0.77, size = 5)+
-    #geom_point(aes(fill = log2FC, stroke = p_size), size = 10, shape = 21, color = "grey10")+
     coord_equal(ratio = 0.5)+
     scale_fill_gradientn(name = bquote(Log[2]~"FC"), 
-                         colours = wes_palette("Zissou1")[c(1,2,3,5)], 
-                         values = c(0,0.55,1), 
-                         limits=c(-8,4), 
-                         breaks=seq(-8,4,4), 
+                         colours = wes_palette("Zissou1")[c(1, 2, 3, 5)], 
+                         values = c(0, 0.55, 1), 
+                         limits=c(-8, 4), 
+                         breaks=seq(-8, 4, 4), 
                          na.value = 'grey90')+
     scale_y_discrete(name="", labels = taxa.lab)+
     labs(x = "")+
@@ -242,7 +241,7 @@ plt3.c <- inner_join(dunntest_strain_dpi,
                          breaks=seq(-8,4,4), 
                          na.value = 'grey90')+
     scale_y_discrete(name="Focal strain", labels = sp.lab)+
-    scale_x_discrete(name="SynCom", labels = sp.lab)+
+    scale_x_discrete(name="SynCom")+
     theme_rs()+
     theme(panel.border = element_blank(),
           axis.text.x = element_text(hjust = 0.5, vjust = 3),

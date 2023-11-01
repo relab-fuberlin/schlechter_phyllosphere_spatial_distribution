@@ -102,7 +102,7 @@ w1_taxa <-  auc_aggregation %>%
     wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
     select(synID, dpi, taxa, estimate, statistic, p) %>% 
     mutate(
-        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
+        symbol = ifelse(p < 0.05, "*", ""),
         p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
 
 w1_taxa_plot_data <- fractional_change_median(auc_aggregation, group = c("synID", "dpi", "taxa")) %>% 
@@ -114,7 +114,7 @@ w1_strain  <-  auc_aggregation %>%
     wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
     select(synID, dpi, strain, estimate, statistic, p) %>% 
     mutate(
-        p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
+        symbol = ifelse(p < 0.05, "*", ""),
         p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
 
 w1_strain_plot_data <- fractional_change_median(auc_aggregation, group = c("synID", "dpi", "strain")) %>% 
@@ -199,12 +199,16 @@ plt.frq <- fractions %>%
                  labeller = labeller(dpi = dpi.lab2))+
     geom_area(aes(fill=fct_reorder(type, index)), color = "black")+
     scale_x_continuous(name = expression(paste("Distance, ", italic(r), " (", mu,"m)")), 
-                       expand = c(0,0), limit=c(0.2,30), breaks = seq(5, 25, 10))+
-    scale_y_continuous(name = expression(paste("Relative frequency of K(", italic(r),")")), 
-                       expand = c(0,0), breaks = seq(0,1,0.5))+
+                       expand = c(0,0), 
+                       limit=c(0.2,30), 
+                       breaks = seq(5, 25, 10))+
+    scale_y_continuous(name = bquote("Relative frequency of"~hat(K)(italic(r))), 
+                       expand = c(0,0), 
+                       breaks = seq(0,1,0.5))+
     scale_fill_manual(name = "Spatial Pattern", labels = pattern.lab, values = pattern.pal)+
     theme_rs()+
-    theme(
+    theme(aspect.ratio = 1,
+          axis.text = element_text(size = 10),
           panel.spacing.x = grid::unit(0.5, "line"),
           strip.text.x = element_text(margin = margin(b = 1, t = 5), face = "plain"),
           strip.text.y = element_text(angle=0, vjust = 0.5, hjust = 0),
@@ -212,56 +216,126 @@ plt.frq <- fractions %>%
 
 plt.taxa <- w1_taxa_plot_data %>% 
     ggplot(aes(synID, taxa))+
-    facet_wrap(~dpi, ncol = 2, labeller = labeller(dpi=dpi.lab2))+
-    geom_tile(color = "black", fill = "white", linewidth = 0.1)+
-    geom_point(aes(fill = median*100, size = p_size), shape = 21)+
-    coord_fixed()+
+    facet_wrap(~dpi, ncol = 2, labeller = labeller(dpi = dpi.lab2))+
+    geom_tile(aes(fill = median*100), colour= "black")+
+    geom_text(aes(label = symbol), vjust = 0.77, size = 5)+
+    coord_equal(ratio = 0.5)+
     scale_fill_gradientn(name = "Change in\naggregation (%)",
-        colours = wes_palette("Zissou1")[c(1,2,3,5)], values=c(0,0.60,1), 
-        limits = c(-70,0), breaks = seq(-70, 0, 20))+
-    scale_size_continuous(name = expression(paste(italic("P"), "-value")), 
-                          range = c(12,2), breaks = c(0.05, 0.5, 1), limits = c(0,1),
-                          labels = c("< 0.05", "0.5", "1.0"))+
+        colours = wes_palette("Zissou1")[c(1,2,3)], 
+        values=c(0, 0.6, 1), 
+        limits = c(-70, 0), 
+        breaks = seq(-70, 0, 20))+
     labs(x="", y="")+
     theme_rs()+
-    theme(aspect.ratio = 1,
-        panel.border = element_blank(),
+    theme(panel.border = element_blank(),
           axis.text.x = element_text(hjust=0.5, vjust=3),
           axis.text.y = element_text(face="italic"),
           strip.text = element_text(face="plain"))
 
 plt.strain <- w1_strain_plot_data %>% 
     ggplot(aes(synID, strain))+
-    facet_wrap(~dpi, ncol = 2, labeller = labeller(dpi=dpi.lab))+
-    geom_tile(color = "black", fill = "white", linewidth = 0.1)+
-    geom_point(aes(fill = median*100, size = p_size), shape = 21)+
-    coord_fixed()+
+    facet_wrap(~dpi, ncol = 2, labeller = labeller(dpi = dpi.lab2))+
+    geom_tile(aes(fill = median*100), colour= "black")+
+    geom_text(aes(label = symbol), vjust = 0.77, size = 5)+
+    coord_equal(ratio = 0.5)+
     scale_fill_gradientn(name = "Change in\naggregation (%)",
-        colours = wes_palette("Zissou1")[c(1,2,3,5)], values=c(0,0.60,1), 
-        limits = c(-70,0), breaks = seq(-70, 0, 20))+
-    scale_size_continuous(name = expression(paste(italic("P"), "-value")), 
-                          range = c(12,2), breaks = c(0.05, 0.5, 1), limits = c(0,1),
-                          labels = c("< 0.05", "0.5", "1.0"))+
+        colours = wes_palette("Zissou1")[c(1,2,3)], 
+        values=c(0, 0.6, 1), 
+        limits = c(-70, 0), 
+        breaks = seq(-70, 0, 20))+
     scale_y_discrete(name = "Focal strain", labels = sp.lab)+
-    labs(x="")+
+    scale_x_discrete(name="SynCom")+
     theme_rs()+
-    theme(aspect.ratio = 3,
-          panel.border = element_blank(),
-          axis.text.x = element_text(hjust=0.5, vjust=3),
+    theme(panel.border = element_blank(),
+          axis.text.x = element_text(hjust = 0.5, vjust = 3),
           strip.text = element_text(face="plain"))
 
 ```
 
 ```{r figure_main_5, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere", dev = "png", fig.dim=c(12,5)}
-areas <- c(patchwork::area(1,1,3,3), patchwork::area(1,4,1), patchwork::area(2,4,4))
-wrap_elements(plot = plt.frq) + plt.taxa + plt.strain  + 
+
+# Define plotting area
+areas <- c(patchwork::area(1,1,3), # A
+           patchwork::area(1,2,1), # B
+           patchwork::area(2,2,3), # C
+           patchwork::area(4,2,4)) # Legend
+plot(areas)
+
+wrap_elements(plot = plt.frq) + plt.taxa + plt.strain + guide_area() +
     plot_annotation(tag_levels = "A") + 
-    plot_layout(guides = "collect", design = areas) & 
-    theme(legend.box.just = "center",
-          plot.margin = margin(0,1,0,1))
+    plot_layout(guides = "collect", 
+                design = areas,
+                widths = c(4, 1),
+                heights = c(1,3,1)) & 
+    theme(legend.box.just = "left",
+          legend.position = "bottom",
+          panel.spacing.x = unit(0.5, "lines"),
+          plot.margin = margin(5, 10, 5, 10)) &
+    guides(fill = guide_colorbar(title.position="top", title.hjust = 0.5))
+
+# Save plot
+ggsave(here("results", "plot_K.png"), width = 12, height = 5)
+
 ```
 
-```{r plot_sup_pattern, fig.id=TRUE, fig.cap="Spatial patterns", dev = "png", fig.dim=c(6,6)}
+# Supplemental Figures
+
+```{r plot_sup_freq_all, include=FALSE}
+fractions_strain <- fractions %>% 
+    group_by(strain, syncom, synID, dpi, type, r) %>% 
+    summarise(mean_fraction = mean(fraction), .groups="drop") %>% 
+    mutate(index = case_when(
+        type == "regular_fraction" ~ 1,
+        type == "random_fraction" ~ 2,
+        type == "aggregate_fraction" ~ 3))
+
+freq_plots <- function(name){
+    plt <- fractions_strain %>% 
+        filter(strain == name) %>% 
+        ggplot(aes(x=r, y=mean_fraction))+
+        facet_nested(synID + syncom ~ dpi, 
+                     nest_line = element_line(color="black"),
+                     labeller = labeller(dpi=dpi.lab2))+
+        geom_area(aes(fill=fct_reorder(type, index)), color = "black")+
+        scale_x_continuous(name = expression(paste("Distance, ", italic(r), " (", mu,"m)")), 
+                           expand = c(0,0), limit=c(0.2,30), breaks = seq(10, 20, 10))+
+        scale_y_continuous(name = bquote("Relative frequency of"~hat(K)(italic(r))), 
+                           expand = c(0,0), breaks = seq(0,1,0.5))+
+        scale_fill_manual(name = "Spatial Pattern", labels = pattern.lab, values = pattern.pal)+
+        theme_rs()+
+        theme(panel.spacing.x = grid::unit(0.5, "line"),
+              panel.spacing.y = grid::unit(1, "line"),
+              strip.text = element_text(angle=0, vjust = 0.5, hjust = 0, 
+                                          margin = margin(r = 5, l = 2), face = "plain"))
+    
+    return(plt)
+}
+
+frq.plt.meL85 <- freq_plots("meL85")
+frq.plt.meL92 <- freq_plots("meL92")
+frq.plt.mr01 <- freq_plots("mr01")
+frq.plt.smfr1 <- freq_plots("smfr1")
+frq.plt.spfa2 <- freq_plots("spfa2")
+
+```
+
+```{r figure_s3, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots K", dev = "png", fig.dim=c(12,8)}
+
+# Set up plot
+frq.plt.meL85 + frq.plt.meL92 + frq.plt.mr01 + frq.plt.smfr1 + frq.plt.spfa2 + 
+    plot_annotation(tag_levels = "A")+
+    plot_layout(ncol = 5, guides = "collect") & 
+    theme(legend.position = "bottom",
+          axis.text = element_text(size = 8),
+          axis.title = element_text(size = 10),
+          strip.text = element_text(size = 10))
+
+# Save plot
+ggsave(here("results", "plot_s3.png"), width = 12, height = 8)
+
+```
+
+```{r figure_s4, fig.id=TRUE, fig.cap="Spatial patterns", dev = "png", fig.dim=c(6,6)}
 plt.pattern <- auc_fold_change %>% 
     ggplot(aes(taxa, fractional_change))+
     facet_grid(dpi ~ type, labeller = labeller(dpi = dpi.lab2, type = pattern.lab))+
@@ -274,55 +348,8 @@ plt.pattern <- auc_fold_change %>%
     labs(x = "", y = "Fractional change")+
     scale_fill_manual(name = "Strain", values=sp.pal, labels=sp.lab)
 
+# Save plot
 plt.pattern
-```
-
-```{r plot_sup_freq_all, include=FALSE}
-fractions_strain <- fractions %>% 
-    group_by(strain, syncom, synID, dpi, type, r) %>% 
-    summarise(mean_fraction = mean(fraction), .groups="drop") %>% 
-    mutate(index = case_when(
-        type == "regular_fraction" ~ 1,
-        type == "random_fraction" ~ 2,
-        type == "aggregate_fraction" ~ 3))
-
-freq_plots <- function(df, name){
-    plt <- df %>% 
-        filter(strain == name) %>% 
-        ggplot(aes(x=r, y=mean_fraction))+
-        facet_nested(synID + syncom ~ dpi, 
-                     nest_line = element_line(color="black"),
-                     labeller = labeller(dpi=dpi.lab2))+
-        geom_area(aes(fill=fct_reorder(type, index)), color = "black")+
-        scale_x_continuous(name = expression(paste("Distance, ", italic(r), " (", mu,"m)")), 
-                           expand = c(0,0), limit=c(0.2,30), breaks = seq(10, 20, 10))+
-        scale_y_continuous(name = expression(paste("Relative frequency of K(", italic(r),")")), 
-                           expand = c(0,0), breaks = seq(0,1,0.5))+
-        scale_fill_manual(name = "Spatial Pattern", labels = pattern.lab, values = pattern.pal)+
-        theme_rs()+
-        theme(panel.spacing.x = grid::unit(0.5, "line"),
-              panel.spacing.y = grid::unit(1, "line"),
-              strip.text = element_text(angle=0, vjust = 0.5, hjust = 0, 
-                                          margin = margin(r = 5, l = 2), face = "plain"))
-    
-    return(plt)
-}
-
-frq.plt.meL85 <- freq_plots(fractions_strain, "meL85")
-frq.plt.meL92 <- freq_plots(fractions_strain, "meL92")
-frq.plt.mr01 <- freq_plots(fractions_strain, "mr01")
-frq.plt.smfr1 <- freq_plots(fractions_strain, "smfr1")
-frq.plt.spfa2 <- freq_plots(fractions_strain, "spfa2")
+ggsave(here("results", "plot_s4.png"), width = 6, height = 5)
 
 ```
-
-```{r figure_supplemental_5, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots K", dev = "png", fig.dim=c(12,8)}
-frq.plt.meL85 + frq.plt.meL92 + frq.plt.mr01 + frq.plt.smfr1 + frq.plt.spfa2 + 
-    plot_annotation(tag_levels = "A")+
-    plot_layout(ncol = 5, guides = "collect") & 
-    theme(legend.position = "bottom",
-          axis.text = element_text(size = 8),
-          axis.title = element_text(size = 10),
-          strip.text = element_text(size = 10))
-```
-
