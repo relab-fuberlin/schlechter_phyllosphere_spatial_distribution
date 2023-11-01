@@ -262,7 +262,11 @@ list_plot <- unique_pair %>%
 
 ```
 
-```{r figure_supplemental_6, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots g", dev = "png", fig.dim=c(16,8)}
+```{r figure_s5, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots g", dev = "png", fig.dim=c(16,8)}
 wrap_plots(list_plot, ncol = 5, guides = "collect")+
     plot_annotation(tag_levels = "A")
+
+# Save plot
+ggsave(here("results", "plot_s5.png"), width = 16, height = 8)
+
 ```
