@@ -234,7 +234,6 @@ plt3.c <- inner_join(dunntest_strain_dpi,
     facet_wrap(~dpi, ncol=2, labeller = labeller(dpi=dpi.lab2))+
     geom_tile(aes(fill = log2FC), colour= "black")+
     geom_text(aes(label=symbol), vjust = 0.77, size = 5)+
-    #geom_point(aes(fill = log2FC, stroke = p_size), size = 10, shape = 21, color = "grey10")+
     coord_equal(ratio = 0.5)+
     scale_fill_gradientn(name = bquote(Log[2]~"FC"), 
                          colours = wes_palette("Zissou1")[c(1,2,3,5)], 
@@ -253,12 +252,14 @@ plt3.c <- inner_join(dunntest_strain_dpi,
 
 ```{r figure_main_3, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere", dev = "png", fig.dim=c(7,5)}
 
+# Define plotting area
 areas <- c(patchwork::area(1,1,3), # A
            patchwork::area(1,2,1), # B
            patchwork::area(2,2,3), # C
            patchwork::area(4,2,4)) # Legend
 plot(areas)
 
+# Set up plot
 wrap_elements(plot = plt3.a) + plt3.b + plt3.c + guide_area() +
     plot_annotation(tag_levels = "A") + 
     plot_layout(design = areas, 
