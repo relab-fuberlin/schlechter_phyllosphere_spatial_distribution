@@ -6,7 +6,7 @@ Spatial distribution analysis of syntehtic bacterial communities (SynCom) on the
 
 This repository contains the scripts used to analyse the data published in: xxxxxx 
 
-Raw data is storaged in zenodo:
+Raw data is storaged in [Zenodo](https://zenodo.org/doi/10.5281/zenodo.100361160):
 File | Data type | Content
 :---: | :---: | :---:
 `cfu.csv` | CSV table | CFU data of each bacterial population in arabidopsis
@@ -24,13 +24,18 @@ git clone https://github.com/roschlec/schlechter_spatial_xxxxx_2023.git
 Now you have all the codes to run!
 
 ## Download datasets
-To download the datasets associated to the manuscript, run the following command in your terminal. You need to be in the root directory of the repository.
+To download the datasets associated to the manuscript, run the following command in your terminal.
+First, you need to install zenodo-get to download the files. Documentation about zenodo-get [here](https://gitlab.com/dvolgyes/zenodo_get).
+```
+pip install zenodo-get
+```
 
+Now you should be able to run the following code from the root directory
 ```
 code/bash_download.sh
 ```
 
-You can also download the datasets manually in Zenodo (add link)
+You can also download the datasets manually in [Zenodo](https://zenodo.org/doi/10.5281/zenodo.100361160).
 
 ## Changes in taxon-specific population density correlate with community complexity
 Scripts used to generate docs/results1_bacdensity_communitycomplexity.Rmd
