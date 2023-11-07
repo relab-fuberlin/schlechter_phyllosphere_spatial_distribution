@@ -250,7 +250,7 @@ plt.c <- inner_join(dunntest_strain_dpi,
           legend.position = "bottom")
 ```
 
-```{r figure_2, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere", fig.width=3.5}
+```{r figure_2, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere", fig.width=3.5, out.width="50%"}
 
 wrap_plots(wrap_elements(plot = plt.a), plt.b, plt.c, ncol = 1) + 
     plot_annotation(tag_levels = "A") + 
@@ -327,7 +327,7 @@ data_fold_S3 = data_fold %>%
 
 ```
 
-```{r figure_s2, warning=FALSE, fig.dim=c(3.5,3)}
+```{r figure_s2, warning=FALSE, fig.width=3.5, fig.height=3, out.width="50%"}
 
 # Plot
 plt.sup = cbind(data_fold_S2, data_fold_S3[,c(-1:-2)]) %>% 
