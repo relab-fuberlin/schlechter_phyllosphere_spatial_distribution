@@ -1,5 +1,5 @@
 ---
-title: 'Spatial distribution - Section 3'
+title: "Bacterial community complexity in the phyllosphere penalises specialists over generalists - Results Section 3"
 author: "Rudolf Schlechter"
 output: 
     html_document:
@@ -17,6 +17,7 @@ options(digits = 2, scipen = 1, pillar.signif = 3)
 library(here)
 library(tidyverse)
 library(rstatix)
+library(ggh4x)
 
 source(here('code', 'palette_syncom.R'))
 source(here('code', 'theme_rs_spatial.R'))
@@ -34,7 +35,8 @@ set.seed(19900725)
 ```{r}
 fractions %>% head
 ```
-Community context was expected to influence the spatial distribution patterns (aggregation, randomness, regularity) within bacterial populations in the phyllosphere. To evaluate this, we first determined relative frequencies of a spatial pattern based on K(r) for every strain in each community context. We then determined the area under the curve of each spatial pattern and calculated the fractional change compared to the near-isogenic control condition, C (Fig 6a).
+
+Community context was expected to influence the spatial distribution patterns (aggregation, randomness, regularity) within bacterial populations in the phyllosphere. To evaluate this, we first determined relative frequencies of a spatial pattern based on $\hat{K}$(*r*), for each bacterial strain within every community context. Subsequently, we quantified the area under the curve of each spatial pattern and calculated the fractional change compared to the near-isogenic control condition, C.
 
 
 ```{r analysis_type}
@@ -49,7 +51,7 @@ kw_type <- auc_fold_change %>%
         p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
 
 kw_eff_type <- auc_fold_change %>% 
-    kruskal_effsize(fractional_change ~ type, ci=TRUE, nboot=100)
+    kruskal_effsize(fractional_change ~ type, ci = TRUE, nboot = 100)
 
 ## One-sample Wilcoxon test
 w1_type <-  auc_fold_change %>% 
@@ -62,7 +64,7 @@ w1_type <-  auc_fold_change %>%
 
 ```
 
-Our initial analysis showed that spatial distribution patterns within populations differed from their respective controls and were also different between them (Kruskal-Wallis, *H*(`r kw_type$df`) = `r kw_type$statistic`, *p* `r kw_type$p_label`). Generally, populations decreased in `r summary_type$percentage[summary_type$type=="aggregate_fraction"]`% and `r summary_type$percentage[summary_type$type=="regular_fraction"]`% in aggregation and regularity, respectively, and consequently, random distributions increased in `r summary_type$percentage[summary_type$type=="random_fraction"]`% (Fig. SX).
+Our initial analysis showed that spatial distribution patterns within populations differed from their respective controls. Combined, there was a reduction of `r summary_type$percentage[summary_type$type=="aggregate_fraction"]`% and `r summary_type$percentage[summary_type$type=="regular_fraction"]`% in aggregation and regularity, respectively, while random distributions increased by `r summary_type$percentage[summary_type$type=="random_fraction"]`%. Increase in randomness was observed mainly in *Methylobacterium*.
 
 ```{r analysis_dpi}
 ## Summary
@@ -83,7 +85,7 @@ w2_dpi <- auc_fold_change %>%
     wilcox_test(fractional_change ~ dpi, p.adjust.method = "holm", detailed = TRUE)
 ```
 
-The observed distribution patterns were consistent between time points: aggregation and regularity within populations decreased, while randomness increased from 7 to 14 dpi. Considering that aggregation and regularity were not statistically different as they follow a consistent pattern, and randomness is a factor that would be related to neutral rather than deterministic processes, we continued our analysis focusing on the changes in aggregation pattern within populations and its influencing factors.
+The observed distribution patterns were consistent across the two time points. That is, aggregation and regularity within populations decreased, while randomness increased in 7 and 14 dpi. Given that aggregation and regularity followed a consistent pattern, and randomness is a factor that would be related to neutral rather than deterministic processes, we decided to focus our analysis only on changes in aggregation within populations and the factors influencing this spatial pattern.
 
 ```{r analysis_taxa_strain}
 ## Summary
@@ -122,7 +124,6 @@ w1_strain_plot_data <- fractional_change_median(auc_aggregation, group = c("synI
 
 ```
 
-Comparing the aggregation pattern between taxa, we observed that *Methylobacterium* and *Sphingomonas* differ in the magnitude of their change in aggregation, but only at 7 dpi (Wilcoxon, *W* = `r w2_taxa$statistic[w2_taxa$dpi=="07dpi"]`, *p* = `r w2_taxa$p[w2_taxa$dpi=="07dpi"]`). While both taxa decreased their self-aggregation pattern (Figure X), *Methylobacterium* showed the largest decrease in aggregation (`r summary_taxa$percentage[summary_taxa$taxa=="Methylobacterium"&summary_taxa$dpi=="07dpi"]`%), being MeL85 and MeL92 among the most affected (`r summary_strain$percentage[summary_strain$strain=="meL85"]` and `r summary_strain$percentage[summary_strain$strain=="meL92"]`%, respectively). By contrast, the sphingomonads SmFR1 and SpFA2 were the least affected, with a `r summary_strain$percentage[summary_strain$strain=="smfr1"]` and `r summary_strain$percentage[summary_strain$strain=="spfa2"]`% decrease in self-aggregation, respectively.
 
 ```{r analysis_synID_strain}
 ##  Summary
@@ -159,29 +160,11 @@ d_synID_strain <- auc_aggregation %>%
 
 ```
 
-Lastly, we evaluated the effect of community complexity in the changes in aggregation pattern of each population. We observed that populations belonging to S2 had a different aggregation pattern to those in S3. Consistent with our previous observation, this difference was statistically significant only at 7 dpi (Wilcoxon, *W* = `r w2_synID$statistic[w2_synID$dpi=="07dpi"]`, *p* = `r w2_synID$p[w2_synID$dpi=="07dpi"]`). Consequently, we focused our analysis at this particular sampling time, which showed that differences in aggregation patterns were more pronounced in S3 than in S2. This was reflected in a `r summary_synID$percentage[summary_synID$dpi=="07dpi"&summary_synID$synID=="S3"]`% decrease in self-aggregation in bacterial populations in S3, and only a `r summary_synID$percentage[summary_synID$dpi=="07dpi"&summary_synID$synID=="S2"]`% decrease in S2. Particularly, MeL85 and MeL92 decreased in `r summary_synID_strain$percentage[summary_synID_strain$synID=="S3"&summary_synID_strain$strain=="meL85"]`% and `r summary_synID_strain$percentage[summary_synID_strain$synID=="S3"&summary_synID_strain$strain=="meL92"]`%, respectively, and SmFR1 only with a `r summary_synID_strain$percentage[summary_synID_strain$synID=="S3"&summary_synID_strain$strain=="smfr1"]`% decrease (Figure). Consequently, MeL82 and MeL92 were statistically different to SmFR1 at S3.
+When comparing the aggregation between bacterial taxa, we identified differences between *Methylobacterium* and *Sphingomonas* only at 7 dpi (Wilcoxon, *W* = `r w2_taxa$statistic[w2_taxa$dpi=="07dpi"]`, *p* = `r w2_taxa$p[w2_taxa$dpi=="07dpi"]`). At this time point, aggregation differed from S2 to S3 (Wilcoxon, *W* = `r w2_synID$statistic[w2_synID$dpi=="07dpi"]`, *p* = `r w2_synID$p[w2_synID$dpi=="07dpi"]`). While both taxa exhibited decreased self-aggregation, *Methylobacterium* showed the largest decrease in aggregation in S3 (`r w1_taxa_plot_data$percentage[w1_taxa_plot_data$synID=="S3"&w1_taxa_plot_data$dpi=="07dpi"&w1_taxa_plot_data$taxa=="Methylobacterium"]`%) relative to the control. This decrease was reflected in a reduction of `r summary_synID_strain$percentage[summary_synID_strain$synID=="S3"&summary_synID_strain$strain=="meL85"]`%, `r summary_synID_strain$percentage[summary_synID_strain$synID=="S3"&summary_synID_strain$strain=="meL92"]`%, and `r summary_synID_strain$percentage[summary_synID_strain$synID=="S3"&summary_synID_strain$strain=="mr01"]`% in aggregation for populations of MeL85, MeL92, and Mr0-1, respectively. Conversely, the sphingomonads SmFR1 and SpFA2 were less affected, with reductions in self-aggregation of `r summary_synID_strain$percentage[summary_synID_strain$synID=="S3"&summary_synID_strain$strain=="smfr1"]`% and `r summary_synID_strain$percentage[summary_synID_strain$synID=="S3"&summary_synID_strain$strain=="spfa2"]`% in S3, respectively. Consequently, MeL85 and MeL92 were found to be statistically different to SmFR1 within S3.
 
-The results of our analysis indicated that bacterial taxa differentially change their spatial distribution patterns in response to community complexity. These changes represented a decrease in self-aggregation and self-regularity, and an increase in their random distribution, particularly for *Methylobacterium* at 7 dpi. Consistent with our results at the CFU-level, *Methylobacterium* were more susceptible than *Sphingomonas*, especially for MeL85 and MeL92 being the most affected, and SmFR1 the most resilient. 
+The results of our analysis indicate that bacterial taxa respond differentially to community complexity, resulting in decreased self-aggregation and self-regularity, alongside an increase in random distribution patterns. This was particularly the case for *Methylobacterium* at 7 dpi in three-species communities. Furthermore and consistent with our results at the CFU and observed cell densities, aggregation was most affected in methylobacteria compared to sphingomonads, particularly MeL85 and MeL92 were negatively affected, while SmFR1 was least affected.
 
 
-```{r, include = FALSE}
-auc_fold_change %>% 
-    ggplot(aes(syncom, strain))+
-    facet_grid(dpi~type)+
-    geom_tile(colour='black', fill='white')+
-    geom_point(aes(fill=fractional_change), shape = 21, size = 6)+
-    scale_fill_gradientn(colours = wes_palette("Zissou1")[c(1,3,5,5)], values = c(0,0.35,1))+
-    coord_fixed()
-
-auc_fold_change %>% 
-    ggplot(aes(auc.inter))+
-    geom_histogram()
-
-lmauc = lm(fractional_change ~ synID + dpi + type + strain, data = auc_fold_change)
-shapiro.test(rstandard(lmauc))
-ncvTest(lmauc)
-
-```
 
 ## Plots
 
@@ -221,7 +204,7 @@ plt.taxa <- w1_taxa_plot_data %>%
     geom_text(aes(label = symbol), vjust = 0.77, size = 5)+
     coord_equal(ratio = 0.5)+
     scale_fill_gradientn(name = "Change in\naggregation (%)",
-        colours = wes_palette("Zissou1")[c(1,2,3)], 
+        colours = rev(brewer.pal(7, "Blues")), 
         values=c(0, 0.6, 1), 
         limits = c(-70, 0), 
         breaks = seq(-70, 0, 20))+
@@ -239,7 +222,7 @@ plt.strain <- w1_strain_plot_data %>%
     geom_text(aes(label = symbol), vjust = 0.77, size = 5)+
     coord_equal(ratio = 0.5)+
     scale_fill_gradientn(name = "Change in\naggregation (%)",
-        colours = wes_palette("Zissou1")[c(1,2,3)], 
+        colours = rev(brewer.pal(7, "Blues")), 
         values=c(0, 0.6, 1), 
         limits = c(-70, 0), 
         breaks = seq(-70, 0, 20))+
@@ -252,14 +235,13 @@ plt.strain <- w1_strain_plot_data %>%
 
 ```
 
-```{r figure_main_5, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere", dev = "png", fig.dim=c(12,5)}
+```{r figure_5, fig.id=TRUE, fig.cap="Bacterial population density in the arabidopsis phyllosphere"}
 
 # Define plotting area
 areas <- c(patchwork::area(1,1,3), # A
            patchwork::area(1,2,1), # B
            patchwork::area(2,2,3), # C
            patchwork::area(4,2,4)) # Legend
-plot(areas)
 
 wrap_elements(plot = plt.frq) + plt.taxa + plt.strain + guide_area() +
     plot_annotation(tag_levels = "A") + 
@@ -274,11 +256,12 @@ wrap_elements(plot = plt.frq) + plt.taxa + plt.strain + guide_area() +
     guides(fill = guide_colorbar(title.position="top", title.hjust = 0.5))
 
 # Save plot
-ggsave(here("results", "plot_K.png"), width = 12, height = 5)
+ggsave(here("results", "figure_5.png"), width = 12, height = 5)
+ggsave(here("results", "figure_5.tiff"), width = 12, height = 5)
 
 ```
 
-# Supplemental Figures
+# Supplemental Figure
 
 ```{r plot_sup_freq_all, include=FALSE}
 fractions_strain <- fractions %>% 
@@ -319,7 +302,7 @@ frq.plt.spfa2 <- freq_plots("spfa2")
 
 ```
 
-```{r figure_s3, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots K", dev = "png", fig.dim=c(12,8)}
+```{r figure_s3, warning=FALSE, fig.id=TRUE, fig.cap="Frequency plots K"}
 
 # Set up plot
 frq.plt.meL85 + frq.plt.meL92 + frq.plt.mr01 + frq.plt.smfr1 + frq.plt.spfa2 + 
@@ -331,7 +314,8 @@ frq.plt.meL85 + frq.plt.meL92 + frq.plt.mr01 + frq.plt.smfr1 + frq.plt.spfa2 +
           strip.text = element_text(size = 10))
 
 # Save plot
-ggsave(here("results", "plot_s3.png"), width = 12, height = 8)
+ggsave(here("results", "figure_s3.png"), width = 12, height = 8)
+ggsave(here("results", "figure_s3.tiff"), width = 12, height = 8)
 
 ```
 
@@ -350,6 +334,7 @@ plt.pattern <- auc_fold_change %>%
 
 # Save plot
 plt.pattern
-ggsave(here("results", "plot_s4.png"), width = 6, height = 5)
+ggsave(here("results", "figure_s4.png"), width = 6, height = 5)
+ggsave(here("results", "figure_s4.tiff"), width = 6, height = 5)
 
 ```
