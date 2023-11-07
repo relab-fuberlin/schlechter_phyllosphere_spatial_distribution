@@ -1,5 +1,5 @@
 ---
-title: "Spatial distribution - Section 2"
+title: "Bacterial community complexity in the phyllosphere penalises specialists over generalists - Results Section 2"
 author: "Rudolf Schlechter"
 output:
   html_document:
@@ -39,15 +39,19 @@ set.seed(19900725)
 
 ## Spatial distribution of individual strains depend on their community context
 
-We obtained a satisfactory representation of all populations at the single cell resolution and their distributions using the centre of mass of single cells in every bacterial combination (Fig. 2a, Fig. 4). 
-The centres of mass of the different cell populations were then used to generate spatial point patterns and further used to analyse spatial distribution patterns of bacteria. In total, we analysed 10,261 fields of view, corresponding to 25 communities (5× C, 10× S2, 10× S3), two sampling points, 3-4 biological replicates (individual plants), and 55±30 (mean±SD) fields of view per replicate, in two independent experiments (Table SX). 
+We obtained an exemplary representation of every bacterial population at the single cell resolution, as well as their spatial distributions. This was accomplished by determining the centre of mass of individual cells within each bacterial combination. The centres of mass of the different cell populations were then used to generate spatial point patterns and further used to analyse spatial distribution patterns of bacteria. In total, we analysed 10,261 fields of view, corresponding to 25 distinct communities (5× C, 10× S2, 10× S3), captured at two time points, encompassing 3 to 4 biological replicates (individual plants). On average, each biological replicate was composed of 55 ± 30 fields of view (mean ± SD), in two independent experiments. 
 
 ```{r}
-cdf <- readRDS(here('results', 'cdf_fit1.rds'))
-quadrat_test <- readRDS(here('results', 'quadrat_test_fit1.rds'))
+# Load spatial test for homogeneity
+# Spatial Kolmogorov-Smirnov Test
+cdf <- readRDS(here('results', 'cdf_fit1.rds')); cdf
+
+# Chi-square quadrat test with Monte Carlo simulations
+quadrat_test <- readRDS(here('results', 'quadrat_test_fit1.rds')); quadrat_test
 ```
 
-We identified several archetypal patterns that follow the leaf surface topography such as veins and epidermal cell grooves with varying levels of occupancy. We observed that the cell distribution on the leaf surface was heterogenous by subsampling the data set to 500 random fields of view. We confirmed that these patterns can be described by an non-homogeneous Poisson process using a spatial Kolmogorov-Smirnov test (*D* = `r cdf$statistic`, *p* = `r cdf$p.value`), and a goodness-of-fit with Monte Carlo test ($X^{2}$ = `r quadrat_test$statistic`, *p* = `r quadrat_test$p.value`, n = 999)
+We identified several characteristic patterns that follow the leaf surface topography, including veins and epidermal cell grooves, each exhibiting varying levels of occupancy. Subsequently, we observed that the cell distribution on the leaf surface was heterogenous by subsampling the data set to 500 random fields of view. We confirmed that these patterns can be described as a non-homogeneous Poisson process by a spatial Kolmogorov-Smirnov test (*D* = `r cdf$statistic`, *p* = `r cdf$p.value`), and a goodness-of-fit with Monte Carlo test ($X^{2}$ = `r quadrat_test$statistic`, *p* = `r quadrat_test$p.value`, n = 999).
+
 
 ```{r import_data, include=FALSE}
 # Import and combine CFU and cell data
@@ -68,7 +72,9 @@ cell_corr <- data_cell %>%
         conf.level = 0.95)
 ```
 
-Next, we estimated cell density per cm^2^ for each biological replicate and compared our estimations of cell density from single-cell microscopy data (# cell cm^-2^) with colony count data (CFU gFW^-1^). We observed a positive correlation (Pearson's *r* = `r cell_corr$cor`, *t* = `r cell_corr$statistic`, *p* = `r cell_corr$p`).
+
+Next, we estimated cell density per square centimetre for each biological replicate and compared our estimations of cell density from single-cell microscopy data [# cell cm^-2^] with colony count data [CFU gFW^-1^], which were positively correlated (Pearson's *r* = `r cell_corr$cor`, *t* = `r cell_corr$statistic`, *p* = `r cell_corr$p`).
+
 
 ```{r test_assumptions}
 # Linear model to test normality and homogeneity of variance
@@ -123,7 +129,10 @@ fc_cell_dpi = data_cell %>%
            logFC = log2(FC))
 ```
 
-We observed a decrease in cell density between populations from S2 to S3 (Fig. 5a). Differences in cell density were not related to time of sampling (Wilcoxon, *W* = `r w_dpi$statistic`, *p* = `r w_dpi$p`), but rather with a decrease of the *Methylobacterium* populations (log~2~FC = `r fold_taxa$log2FC[fold_taxa$taxa=="Methylobacterium"&fold_taxa$synID=="S3"]`) and a marginal increase of *Sphingomonas* populations in S3 (log~2~FC = `r fold_taxa$log2FC[fold_taxa$taxa=="Sphingomonas"&fold_taxa$synID=="S3"]`). These differences were driven by a decrease in MeL85 populations and an increase in SmFR1 in S3 (Fig). These observations indicate that the effect of the community complexity in a population was consistent at the CFU level and the single-cell resolution.
+We observed a decrease in cell density between populations from S2 to S3 (Figure 4A). Differences in cell density were unrelated to time of sampling (Wilcoxon,  *W* = `r w_dpi$statistic`, *p* = `r w_dpi$p`), but was rather driven by a decrease in *Methylobacterium* populations (log~2~FC = `r fold_taxa$log2FC[fold_taxa$taxa=="Methylobacterium"&fold_taxa$synID=="S3"]`) and a marginal increase in *Sphingomonas* populations (log~2~FC = `r fold_taxa$log2FC[fold_taxa$taxa=="Sphingomonas"&fold_taxa$synID=="S3"]`). These differences were associated with a decline in MeL85 populations and an increase in SmFR1 within S3. These observations indicate that the effect of the community complexity in a population was consistent at the CFU level and the single-cell resolution.
+
+
+## Figures
 
 ```{r figure_main_5_setup, include = FALSE}
 # Plot CFU
@@ -134,7 +143,7 @@ plt.cell.stat = dunntest_taxa %>%
     mutate(p.adj.label = case_when(p.adj < 0.05 ~ "*", TRUE ~ "ns"), 
            y.position = c(7.5,8.5,8,7.5,8.5,8))
 
-plt3.a <- data_cell %>% 
+plt.a <- data_cell %>% 
     ggplot(aes(synID, logCell))+
     facet_wrap(~taxa)+
     stat_eye(
@@ -159,7 +168,7 @@ plt3.a <- data_cell %>%
     theme_rs()+
     theme(axis.text.x = element_text(hjust=0.5, vjust=1.5))
 
-plt3.b <- inner_join(dunntest_taxa, 
+plt.b <- inner_join(dunntest_taxa, 
                      fold_taxa, 
                      by = c("taxa", "synID")) %>% 
     filter(group1 == "C") %>%
@@ -182,7 +191,7 @@ plt3.b <- inner_join(dunntest_taxa,
           axis.text.y = element_text(face="italic"),
           strip.text = element_text(face="plain"))
 
-plt3.c <- inner_join(dunntest_strain, fold_strain, by = c("strain", "synID")) %>% 
+plt.c <- inner_join(dunntest_strain, fold_strain, by = c("strain", "synID")) %>% 
     filter(group1 == "C") %>% 
     ggplot(aes(x=synID, y=strain))+
     geom_tile(aes(fill = log2FC), colour= "black")+
@@ -203,17 +212,16 @@ plt3.c <- inner_join(dunntest_strain, fold_strain, by = c("strain", "synID")) %>
 
 ```
 
-```{r figure_main_5, fig.id=TRUE, fig.cap="Bacterial cell density in the arabidopsis phyllosphere", dev = "png", fig.dim=c(8,5)}
+```{r figure_4, fig.id=TRUE, fig.cap="Bacterial cell density in the arabidopsis phyllosphere"}
 
 # Define plotting area
 areas <- c(patchwork::area(1,1,3), # A
            patchwork::area(1,2,1), # B
            patchwork::area(2,2,3), # C
            patchwork::area(4,2,4)) # Legend
-plot(areas)
 
 # Set up plot
-wrap_elements(plot = plt3.a) + plt3.b + plt3.c + guide_area() +
+wrap_elements(plot = plt.a) + plt.b + plt.c + guide_area() +
     plot_annotation(tag_levels = "A") + 
     plot_layout(design = areas, 
                 guides = "collect",
@@ -225,6 +233,7 @@ wrap_elements(plot = plt3.a) + plt3.b + plt3.c + guide_area() +
     guides(fill = guide_colorbar(title.position="top", title.hjust = 0.5))
 
 # Save plot
-ggsave(here("results", "plot_cell.png"), width = 7, height = 5)
+ggsave(here("results", "figure_4.png"), width = 7, height = 5)
+ggsave(here("results", "figure_4.tiff"), width = 7, height = 5)
 
 ```
