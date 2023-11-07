@@ -40,7 +40,7 @@ You can also download the datasets manually in [Zenodo](https://zenodo.org/doi/1
 ## Changes in taxon-specific population density correlate with community complexity
 Scripts used to generate docs/results1_bacdensity_communitycomplexity.Rmd
 ```
-code/bash_script1.sh
+code/bash_script1.sh data
 ```
 This script will analyse the CFU data and create a `results` directory to store the processed data.
 Additionally, the Rmarkdown containing the data analysis and plots will be rendered.
