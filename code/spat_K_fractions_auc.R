@@ -4,6 +4,7 @@
 #   Load required libraries
 library(here)
 library(tidyverse)
+library(DescTools)
 
 # Load data
 fractions <- read.csv(here('results', 'stat_K_fractions.csv'), header = TRUE, row.names = "X") %>% 
