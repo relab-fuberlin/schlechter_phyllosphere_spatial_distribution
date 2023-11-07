@@ -212,7 +212,7 @@ plt.c <- inner_join(dunntest_strain, fold_strain, by = c("strain", "synID")) %>%
 
 ```
 
-```{r figure_4, fig.id=TRUE, fig.cap="Bacterial cell density in the arabidopsis phyllosphere", fig.width=3.5}
+```{r figure_4, fig.id=TRUE, fig.cap="Bacterial cell density in the arabidopsis phyllosphere", fig.width=3.5, fig.height=4, out.width="50%"}
 
 # Define plotting area
 design <- "11
