@@ -32,6 +32,8 @@ conda activate spatial
 ## Download datasets
 To download the datasets associated to the manuscript, run the following command in your terminal.
 First, you need to install zenodo-get to download the files. Documentation about zenodo-get [here](https://gitlab.com/dvolgyes/zenodo_get).
+You don't have to install this package if you use the conda environment provided.
+
 ```
 pip install zenodo-get
 ```
