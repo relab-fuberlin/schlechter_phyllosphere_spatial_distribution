@@ -1,0 +1,19 @@
+name: spatial
+channels:
+  - defaults
+  - conda-forge
+  - base
+  - R
+dependencies:
+  - r-base=4.2.2
+  - r-tidyverse=2.0.0
+  - r-here=1.0.1
+  - r-car=3.1_2
+  - r-desctools=0.99.50
+  - r-rstatix=0.7.2
+  - r-spatstat=3.0_7
+  - r-ggdist=3.3.0
+  - r-ggpubr=0.6.0
+  - r-ggh4x=0.2.6
+  - r-patchwork=1.1.3
+
