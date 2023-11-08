@@ -19,7 +19,7 @@ File | Data type | Content
 ## Setting up 
 First, you need to clone this repository
 ```
-git clone https://github.com/roschlec/schlechter_spatial_xxxxx_2023.git
+git clone https://github.com/roschlec/schlechter_phyllosphere_spatial_distribution.git
 ```
 Now you have all the codes to run!
 
