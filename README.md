@@ -1,6 +1,4 @@
-# schlechter_spatial_xxxxx_2023
-
-UNDER CONSTRUCTION
+# Bacterial community complexity in the phyllosphere penalises specialists over generalists
 
 Spatial distribution analysis of syntehtic bacterial communities (SynCom) on the _Arabidopsis thaliana_ leaf surface.
 
@@ -22,6 +20,14 @@ First, you need to clone this repository
 git clone https://github.com/roschlec/schlechter_phyllosphere_spatial_distribution.git
 ```
 Now you have all the codes to run!
+
+It is advisable to run these codes in a conda environment. The file `environment.yml` will help you create an environment will the necessary packages. We recommend using [mamba](https://mamba.readthedocs.io/en/latest/index.html).
+
+```
+mamba env create -f environment.yml
+conda activate spatial
+```
+
 
 ## Download datasets
 To download the datasets associated to the manuscript, run the following command in your terminal.
