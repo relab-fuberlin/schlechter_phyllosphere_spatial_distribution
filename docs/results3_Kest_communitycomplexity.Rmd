@@ -327,7 +327,7 @@ plt.pattern <- auc_fold_change %>%
     ggplot(aes(taxa, fractional_change))+
     facet_grid(dpi ~ type, labeller = labeller(dpi = dpi.lab2, type = pattern.lab))+
     geom_jitter(aes(fill = strain), color = "black", size = 1, stroke = 0.25, width = 0.1, alpha = 0.8, pch = 21)+
-    geom_boxplot(alpha = 0.5, fill = "white", width = 0.2, outlier.alpha = 0, linewidth = 0.22)+
+    geom_boxplot(alpha = 0.5, fill = "white", width = 0.2, outlier.alpha = 0, linewidth = 0.25)+
     geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.25)+
     theme_rs()+
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, face="italic"),
