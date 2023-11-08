@@ -8,6 +8,7 @@ docs/*
 .Ruserdata.DS_Store
 .DS_Store
 .Rprofile
+*.Rproj
 
 # History files
 .Rhistory
