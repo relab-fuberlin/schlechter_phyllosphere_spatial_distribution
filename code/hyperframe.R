@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript 
 
 library(spatstat)
+library(here)
 source(here('code', 'function_hyperframe.R'))
 
 # Set variables for creating the hyperframe in a two-dimensional plane

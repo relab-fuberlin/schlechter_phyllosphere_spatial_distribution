@@ -4,6 +4,7 @@ results/quadrat_test_fit0.rds
 renv/*
 docs/*
 !docs/*.Rmd
+submission/*
 
 .Ruserdata.DS_Store
 .DS_Store

@@ -11,8 +11,8 @@ set.seed(19900725)
 
 # Chi-square test
 # Set variables for creating the hyperframe in a two-dimensional plane
-xrange <- c(0,124.94)
-yrange <- c(0,100.24)
+xrange <- c(0, 124.94)
+yrange <- c(0, 100.24)
 unit <- "micron"
 W <- owin(xrange, yrange, unitname=unit)
 formula_syncom <- "~syncom + dpi + exp + img"
@@ -50,5 +50,5 @@ cdf_fit1 <- cdf.test(fit1, "x", test = "ks")
 write_rds(cdf_fit1, here('results', 'cdf_fit1.rds'))
 
 # Run dispersion test for spatial point pattern based on quadrat counts
-qt_fit1 <- quadrat.test(fit0, method = "MonteCarlo", nsim=999)
+qt_fit1 <- quadrat.test(fit1, method = "MonteCarlo", nsim = 999)
 write_rds(qt_fit1, here('results', 'quadrat_test_fit1.rds'))
