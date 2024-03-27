@@ -54,21 +54,21 @@ This script will analyse the CFU data and create a `results` directory to store 
 Additionally, the Rmarkdown containing the data analysis and plots will be rendered.
 
 ## Spatial distribution of individual strains depends on their community context
-Scripts used to generate docs/results2_celldensity_communitycomplexity.Rmd
+Scripts used to generate `docs/results2_celldensity_communitycomplexity.Rmd`
 ```
 code/bash_script2.sh
 ```
 This script will analyse the single-cell data. Additionally, the Rmarkdown containing the data analysis and plots will be rendered.
 
 ## Effect of community complexity on intraspecific spatial relations
-Scripts used to generate docs/results3_Kest_communitycomplexity.Rmd
+Scripts used to generate `docs/results3_Kest_communitycomplexity.Rmd`
 ```
 code/bash_script3.sh
 ```
 Using coordinate data, this script will perform the spatial analysis (K-estimates) within each population. Additionally, the Rmarkdown containing the data analysis and plots will be rendered.
 
 ## Effect of community complexity on interspecific spatial correlations
-Scripts used to generate docs/results4_PCF_communitycomplexity.Rmd
+Scripts used to generate `docs/results4_PCF_communitycomplexity.Rmd`
 ```
 code/bash_script4.sh
 ```
