@@ -19,6 +19,10 @@ library(here)
 library(tidyverse)
 library(car)
 library(rstatix)
+library(forcats)
+library(emmeans)
+library(lme4)
+library(multcomp)
 
 # Plotting 
 library(ggdist)
@@ -29,6 +33,7 @@ library(patchwork)
 source(here('code', 'palette_syncom.R'))
 source(here('code', 'theme_rs_spatial.R'))
 source(here('code', 'dunnet_function.R'))
+source(here('code', 'function_triad.R'))
 
 set.seed(19900725)
 
@@ -78,10 +83,8 @@ keff_synID = data_cfu %>%
 
 # Dunn's Test
 dunn_synID = data_cfu %>% 
-    dunn_test(cfu_log ~ synID, p.adjust.method = "holm") %>% 
-    mutate(p_label = case_when(
-        p.adj < 0.05 ~ "< 0.05", 
-        TRUE ~ as.character(p.adj)))
+    group_by(dpi) %>% 
+    dunn_test(cfu_log ~ synID, p.adjust.method = "holm")
 
 # Fold change of population density by SynCom complexity (synID)
 fc_cfu_synID = data_cfu %>% 
@@ -99,7 +102,7 @@ We first tested the influence of community complexity on individual bacterial po
 ```{r cfu_analysis_dpi}
 # Wilcoxon test and effect size for sampling time (dpi)
 w_dpi = data_cfu %>% 
-    wilcox_test(formula = cfu_log ~ dpi) %>% 
+    rstatix::wilcox_test(formula = cfu_log ~ dpi) %>% 
     mutate(p_label = case_when(
         p < 0.05 ~ "< 0.05", 
         TRUE ~ as.character(p)))
@@ -173,9 +176,8 @@ Collectively, these findings indicate that bacterial taxa differentially respond
 # Plot CFU
 # Multiple comparisons
 plt.cfu.stat = dunn_synID %>% 
-    mutate(p.adj.signif = case_when(
-        p.adj.signif == "****" ~ "*", 
-        TRUE ~ p.adj.signif), y.position = c(9,10,9.5))
+    mutate(p.adj.signif = ifelse(p.adj < 0.05, "*", "ns")) %>% 
+    add_xy_position(x = "synID")
 
 # Plot A
 plt.a <- data_cfu %>% 
@@ -204,17 +206,17 @@ plt.a <- data_cfu %>%
 
 # Plot B
 plt.b <- inner_join(dunntest_taxa_dpi, fold_taxa_dpi, by = c("taxa", "dpi", "synID")) %>% 
+    mutate(label = paste0(sprintf(log2FC, fmt = '%#.2f'), symbol)) %>% 
     filter(group1 == "C") %>% 
     ggplot(aes(x = synID, y = taxa))+
     facet_wrap(~dpi, ncol = 2, labeller = labeller(dpi = dpi.lab2))+
     geom_tile(aes(fill = log2FC), colour = "black")+
-    geom_text(aes(label = symbol), vjust = 0.77, size = 5)+
-    #coord_equal(ratio = 0.5)+
+    geom_text(aes(label = label), vjust = 0.5, size = 2)+
     scale_fill_gradientn(name = bquote(Log[2]~"FC"), 
-                         colours = wes_palette("Zissou1")[c(1, 2, 3, 5)], 
-                         values = c(0, 0.55, 1), 
-                         limits = c(-8, 4), 
-                         breaks = seq(-8, 4, 4), 
+                         colours = wes_palette("Zissou1"), 
+                         values = c(0,0.5,1), 
+                         limits = c(-8,4), 
+                         breaks = seq(-8,4,4), 
                          na.value = 'grey90')+
     scale_y_discrete(name = "", labels = taxa.lab)+
     labs(x = "")+
@@ -226,18 +228,16 @@ plt.b <- inner_join(dunntest_taxa_dpi, fold_taxa_dpi, by = c("taxa", "dpi", "syn
           legend.position = "bottom")
 
 # Plot C
-plt.c <- inner_join(dunntest_strain_dpi, 
-                     fold_strain_dpi, 
-                     by = c("strain", "dpi", "synID")) %>% 
+plt.c <- inner_join(dunntest_strain_dpi, fold_strain_dpi, by = c("strain", "dpi", "synID")) %>% 
+    mutate(label = paste0(sprintf(log2FC, fmt = '%#.2f'), symbol)) %>% 
     filter(group1 == "C") %>% 
     ggplot(aes(x = synID, y = strain))+
     facet_wrap(~dpi, ncol = 2, labeller = labeller(dpi=dpi.lab2))+
     geom_tile(aes(fill = log2FC), colour = "black")+
-    geom_text(aes(label = symbol), vjust = 0.77, size = 5)+
-    #coord_equal(ratio = 0.5)+
+    geom_text(aes(label = label), vjust = 0.5, size = 2)+
     scale_fill_gradientn(name = bquote(Log[2]~"FC"), 
-                         colours = wes_palette("Zissou1")[c(1,2,3,5)], 
-                         values = c(0,0.55,1), 
+                         colours = wes_palette("Zissou1"), 
+                         values = c(0,0.5,1), 
                          limits = c(-8,4), 
                          breaks = seq(-8,4,4), 
                          na.value = 'grey90')+
@@ -264,8 +264,8 @@ wrap_plots(wrap_elements(plot = plt.a), plt.b, plt.c, ncol = 1) +
     guides(fill = guide_colorbar(title.position="top", title.hjust = 0.5, barheight = unit(0.1, 'in')))
 
 # Save plot
-ggsave(here("results", "figure_2.png"), width = 3.5, height = 5)
-ggsave(here("results", "figure_2.tiff"), width = 3.5, height = 5)
+ggsave(here("results", "figure_2.png"), width = 3, height = 6)
+ggsave(here("results", "figure_2.tiff"), width = 3, height = 6)
 
 ```
 
@@ -361,3 +361,542 @@ ggsave(here("results", "figure_s2.png"), width = 3.5, height = 3)
 ggsave(here("results", "figure_s2.tiff"), width = 3.5, height = 3)
 ```
 
+
+## Resubmission
+### Compare two-member sets within S3
+We were asked to analyse the change in bacterial abundance within the three two-member sets of each S3 (normalise by pair)
+
+
+```{r}
+# Split the data
+split_data <- split(data_cfu, 
+                    list(data_cfu$synID, data_cfu$syncom, data_cfu$exp, data_cfu$sample, data_cfu$dpi), 
+                    drop = TRUE,
+                    sep = "_")
+
+# Apply the function to each group
+result_list <- lapply(split_data, process_triad)
+
+# Combine the results into a single dataframe
+final_result <- do.call(rbind, result_list)
+
+# Clean data
+cfu_pair_full <- final_result %>% 
+    rownames_to_column(var = "label") %>% 
+    separate(label, into = c("synID", "syncom", "exp", "sample", "dpi"), sep = "_") %>% 
+    separate(dpi, into = c("dpi", "combn"), convert = TRUE) %>% 
+    unite(strain1:strain2, col = "pair") %>% 
+    mutate(log_cfu = log10(sum),
+           taxa_pair = case_when(
+            pair == "meL85_meL92" | 
+                pair == "meL85_meL92" | 
+                pair == "meL85_mr01" | 
+                pair == "meL92_mr01" ~ "MM",
+            pair == "meL85_smfr1" | 
+                pair == "meL85_spfa2" | 
+                pair == "meL92_smfr1" | 
+                pair == "meL92_spfa2" | 
+                pair == "mr01_smfr1" | 
+                pair == "mr01_spfa2" ~ "MS",
+            pair == "smfr1_spfa2" ~ "SS"),
+        taxa_excluded = case_when(
+            excluded == "smfr1" | excluded == "spfa2" ~ "Sphingomonas",
+            excluded == "meL85" | excluded == "meL92" | excluded == "mr01" ~ "Methylobacterium")) %>% 
+    mutate(taxa_excluded = factor(taxa_excluded),
+           taxa_pair = factor(taxa_pair))
+    
+```
+
+
+First, we determine if there are differences between pair of taxa
+
+```{r}
+# Create a LMM to account for syncom as grouping factor
+models <- cfu_pair_full %>% 
+    filter(synID != "C") %>% 
+    split(., .$dpi) %>% 
+    lapply(., lmer, formula = log_cfu ~ taxa_pair * synID + (1 | syncom))
+
+# Compare means and pairwise comparisons
+emm_list <- lapply(models, emmeans, ~taxa_pair * synID)
+
+contrast_list <- lapply(emm_list, cld, alpha = 0.05, Letters = letters, adjust = "BH") %>% 
+    lapply(., data.frame) %>% 
+    do.call(rbind, .) %>% 
+    rownames_to_column(var = "dpi") %>% 
+    mutate(across(where(is.character), ~ str_remove_all(., "\\s+")),
+           dpi = str_replace(dpi, "\\.[0-9]", ""))
+
+# Plot
+plt_cfu_taxa_pair <- cfu_pair_full %>% 
+    filter(synID != "C") %>% 
+    ggplot(., aes(taxa_pair, log_cfu, fill = synID))+
+    facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
+    geom_jitter(aes(group = synID), 
+                position = position_jitterdodge(jitter.width = 0.45, dodge.width = 0.9), 
+                alpha = 0.2, size = 0.5)+
+    geom_boxplot(outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.9)+
+    geom_text(data = contrast_list, aes(label = .group, y = 9.5, group = synID), 
+              size = 2, position = position_dodge(width = 0.9))+
+    scale_y_continuous(limits = c(4, 9.8), breaks = c(4, 6, 8, 10))+
+    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], label = syn.lab)+
+    theme_rs()+
+    coord_flip()+
+    labs(y = plt_bac_density_lab,
+         x = "Taxa Pair")+
+    theme(strip.text = element_text(face = "plain"),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "bottom")
+```
+
+Then, we determine if there are differences between pairs
+
+```{r}
+# Create a LMM to account for syncom as grouping factor
+models_pair <- cfu_pair_full %>% 
+    filter(synID != "C") %>% 
+    split(., list(.$dpi, .$synID), sep = "_") %>% 
+    lapply(., lmer, formula = log_cfu ~ pair + (1 | syncom))
+
+models_pair <- cfu_pair_full %>% 
+    filter(synID != "C") %>% 
+    split(., .$dpi, sep = "_") %>% 
+    lapply(., lmer, formula = log_cfu ~ pair * synID + (1 | syncom))
+
+# Compare means and pairwise comparisons
+emm_pair <- lapply(models_pair, emmeans, ~synID | pair)
+
+contrast_pair <- lapply(emm_pair, contrast, alpha = 0.05, "pairwise", adjust = "BH") %>% 
+    lapply(., data.frame) %>% 
+    do.call(rbind, .) %>% 
+    rownames_to_column(var = "label") %>% 
+    separate(label, into = "dpi") %>% 
+    separate(contrast, into = c("group1", "group2"), sep = " - ") %>% 
+    mutate(p.adj.signif = ifelse(p.value < 0.05, "*", "ns")) %>% 
+    left_join(., unique(cfu_pair_full[,c(7,11)]), by = "pair")
+
+# Plot
+plt_cfu_strain_pair <- cfu_pair_full %>% 
+    filter(synID != "C") %>% 
+    ggplot(., aes(fct_reorder(pair, as.numeric(taxa_pair)), log_cfu))+
+    facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
+    geom_jitter(aes(fill = synID), 
+                position = position_jitterdodge(jitter.width = 0.45, dodge.width = 0.9), 
+                alpha = 0.2, size = 0.5)+
+    geom_boxplot(aes(fill = synID), outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.9)+
+    geom_text(data = contrast_pair, aes(label = p.adj.signif, y = 9.5), 
+              size = 2, position = position_dodge(width = 0.9))+
+    scale_x_discrete(labels = pair.lab2)+
+    scale_y_continuous(limits = c(4, 9.8), breaks = c(4, 6, 8, 10))+
+    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], labels = syn.lab)+
+    theme_rs()+
+    coord_flip()+
+    labs(y = plt_bac_density_lab,
+         x = "Strain Pair")+
+    theme(axis.text.x = element_text(hjust = 1, vjust = 0.5),
+          strip.text = element_text(face = "plain"),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "bottom")
+
+```
+
+
+This is the fold change
+
+```{r}
+## Data sets
+cfu_pair <- cfu_pair_full %>% 
+    group_by(synID, syncom, dpi, pair, taxa_pair, excluded, taxa_excluded) %>% 
+    summarise(cfu_median = median(sum), .groups = "drop") %>%
+    filter(synID != "C")
+
+pair_S2 <- cfu_pair %>% 
+    filter(synID == "S2") %>% 
+    dplyr::select(dpi, pair, cfu_median)
+
+pair_S3 <- cfu_pair %>% 
+    filter(synID == "S3" & excluded != 'NA') %>% 
+    left_join(., pair_S2, by = c("dpi", "pair"), suffix = c(".S3", ".S2")) %>% 
+    mutate(fc_pair = log2(cfu_median.S3/cfu_median.S2))
+``` 
+
+
+```{r}
+# Stats, compare the median log2 FC of pairs in S3 compared to S2
+dunn_strain_pair <- pair_S3 %>% 
+    group_by(dpi) %>% 
+    dunn_test(fc_pair ~ pair, p.adjust.method = "BH") %>% 
+    mutate(p.adj.signif = ifelse(p.adj < 0.05, "*", "ns")) %>% 
+    add_x_position(x = "pair")
+
+dunn_allpair <- pair_S3 %>% 
+    group_by(dpi) %>% 
+    dunn_test(fc_pair ~ taxa_pair, p.adjust.method = "BH") %>% 
+    mutate(p.adj.signif = ifelse(p.adj < 0.05, "*", "ns")) %>% 
+    add_xy_position(x = "taxa_pair")
+
+dunn_taxapair <- pair_S3 %>% 
+    group_by(dpi, taxa_excluded) %>% 
+    dunn_test(fc_pair ~ taxa_pair, p.adjust.method = "BH") %>% 
+    mutate(p.adj.signif = ifelse(p.adj < 0.05, "*", "ns")) %>% 
+    add_xy_position(x = "taxa_pair")
+
+dunn_pair <- pair_S3 %>% 
+    group_by(dpi, excluded) %>% 
+    dunn_test(fc_pair ~ taxa_pair, p.adjust.method = "BH") %>% 
+    mutate(p.adj.signif = ifelse(p.adj < 0.05, "*", "ns")) %>% 
+    add_xy_position(x = "taxa_pair")
+
+```
+
+##
+```{r}
+## Plots
+plt_taxapair <- pair_S3 %>% 
+    ggplot(., aes(x = taxa_pair, y = fc_pair))+
+    facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
+    geom_hline(yintercept = 0, linetype = 2, linewidth = 0.3)+
+    geom_jitter(alpha = 0.5, size = 0.8, width = 0.2)+
+    geom_boxplot(aes(fill = taxa_pair), outlier.alpha = 0, alpha = 0.75, size = 0.2, width = 0.45)+
+    stat_pvalue_manual(dunn_allpair, 
+                       label = "p.adj.signif", tip.length = 0.02, 
+                       size = 2, bracket.nudge.y = 0.2, hide.ns = TRUE, 
+                       step.increase = 0.02, coord.flip = TRUE)+
+    theme_rs()+
+    scale_y_continuous(name = bquote(Log[2]~"FC Taxa pair"), limits = c(-6.5, 0))+
+    scale_x_discrete(name = "Taxa pair")+
+    scale_fill_manual(name = "Taxa pair", values = taxapair.pal, labels = taxapair.lab)+
+    coord_flip()+
+    theme(strip.text.x = element_text(face = "plain"),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "bottom")
+
+plt_taxastrain <- pair_S3 %>% 
+    ggplot(., aes(x = fct_reorder(pair, as.numeric(taxa_pair)), y = fc_pair))+
+    facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
+    geom_hline(yintercept = 0, linetype = 2, linewidth = 0.3)+
+    geom_jitter(width = 0.1, alpha = 0.5, size = 0.8)+
+    geom_boxplot(aes(fill = taxa_pair), outlier.alpha = 0, alpha = 0.75, size = 0.2, width = 0.45)+
+    stat_pvalue_manual(dunn_strain_pair %>% 
+                           filter(p.adj < 0.05) %>% 
+                           mutate(xmin = 3, xmax = 10), 
+                       label = "p.adj.signif", tip.length = 0.02,
+                       y.position = -1, size = 2, bracket.nudge.y = 0.2, hide.ns = TRUE, 
+                       step.increase = 0.02, coord.flip = TRUE)+
+    theme_rs()+
+    scale_y_continuous(name = bquote(Log[2]~"FC Taxa pair"), limits = c(-6.5, 0))+
+    scale_x_discrete(name = "Strain pair", labels = pair.lab2)+
+    scale_fill_manual(name = "Taxa pair", values = taxapair.pal, labels = taxapair.lab)+
+    coord_flip()+
+    theme(strip.text.x = element_text(face = "plain"),
+          strip.text.y = element_blank(),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "bottom")
+```
+
+```{r}
+wrap_plots(plt_cfu_taxa_pair, plt_taxapair, plt_cfu_strain_pair, plt_taxastrain, ncol = 2) + 
+    plot_annotation(tag_levels = "A") + 
+    plot_layout(heights = c(0.5,1), widths = c(1,1),
+                guides = "collect") & 
+    theme(legend.box.just = "left",
+          legend.position = "bottom",
+          panel.spacing.x = unit(0.5, "lines"),
+          plot.margin = margin(1,1,0,1),
+          plot.tag = element_text(size = 7)) &
+    guides(fill = guide_legend(title.position="top", title.hjust = 0.5, barheight = unit(0.1, 'in')))
+
+# Save plot  
+ggsave(here("results", "figure_x1.png"), width = 6, height = 5)
+ggsave(here("results", "figure_x1.tiff"), width = 6, height = 5)
+
+```
+
+##
+
+```{r}
+# Boxplots
+plt1_taxapair <- pair_S3 %>% 
+    ggplot(., aes(x = taxa_pair, y = fc_pair,  fill = taxa_excluded))+
+    facet_grid(cols = vars(dpi), rows = vars(taxa_excluded), 
+               labeller = labeller(dpi = dpi.lab2))+
+    geom_hline(yintercept = 0, linetype = 2, linewidth = 0.3)+
+    geom_jitter(aes(group = taxa_excluded), width = 0.2, alpha = 0.5, size = 0.8)+
+    geom_boxplot(outlier.alpha = 0, alpha = 0.75, size = 0.2, width = 0.4)+
+    stat_pvalue_manual(dunn_taxapair, label = "p.adj.signif", tip.length = 0.01, 
+                       size = 2, bracket.nudge.y = 0.2, hide.ns = TRUE, 
+                       step.increase = 0.02, coord.flip = TRUE)+
+    theme_rs()+
+    scale_y_continuous(name = bquote(Log[2]~"FC Focal taxa pair"), limits = c(-6.5, 0))+
+    scale_x_discrete(name = "Focal taxa pair")+
+    scale_fill_manual(name = "Tritagonist taxon", values = taxa.pal, labels = taxa.lab)+
+    coord_flip()+
+    theme(strip.text.x = element_text(face = "plain"),
+          strip.text.y = element_blank(),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "bottom")
+
+plt2_taxapair <- pair_S3 %>% 
+    ggplot(., aes(x = taxa_pair, y = fc_pair,  fill = excluded))+
+    facet_grid(cols = vars(dpi), rows = vars(excluded), 
+               labeller = labeller(dpi = dpi.lab2, excluded = sp.lab))+
+    geom_hline(yintercept = 0, linetype = 2, linewidth = 0.3)+
+    geom_jitter(aes(group = taxa_excluded), width = 0.05, alpha = 0.5, size = 0.8)+
+    geom_boxplot(outlier.alpha = 0, alpha = 0.75, size = 0.2, width = 0.4)+
+    stat_pvalue_manual(dunn_pair, label = "p.adj.signif", tip.length = 0.01, 
+                       size = 2, bracket.nudge.y = 0.2, hide.ns = TRUE, 
+                       step.increase = 0.02, coord.flip = TRUE)+
+    theme_rs()+
+    scale_y_continuous(name = bquote(Log[2]~"FC Focal taxa pair"), limits = c(-6.5, 0))+
+    scale_x_discrete(name = "Focal taxa pair")+
+    scale_fill_manual(name = "Tritagonist strain", values = sp.pal, labels = sp.lab)+
+    coord_flip()+
+    theme(strip.text.x = element_text(face = "plain"),
+          strip.text.y = element_blank(),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "bottom")
+
+
+wrap_plots(wrap_elements(panel = rectGrob(gp = gpar(fill = 'white'))),
+                         (plt1_taxapair + plt2_taxapair), ncol = 1)+
+    plot_annotation(tag_levels = "A") + 
+    plot_layout(heights = c(1, 2), widths = c(1,1)) &
+    theme(legend.box.just = "left",
+          legend.position = "bottom",
+          panel.spacing.x = unit(0.5, "lines"),
+          plot.margin = margin(1,1,0,1),
+          plot.tag = element_text(size = 7)) &
+    guides(fill = guide_legend(title.position="top", title.hjust = 0.5, barheight = unit(0.1, 'in')))
+
+# Save plot  
+ggsave(here("results", "figure_x2.png"), width = 6, height = 4)
+ggsave(here("results", "figure_x2.tiff"), width = 6, height = 4)
+ggsave(here("results", "figure_x2.pdf"), width = 6, height = 4)
+
+```
+
+
+Pairs of taxa (MM, MS, and SS) differ in their abundance in S3 compared to S2. All of them decreased but not at the same rate. MM pairs were the most affected, while MS and SS were not different to each other, except at 14 dpi, in which SS pairs (SmFR1 and SpFA2) were most similar to pairs alone (S2).
+
+Tritagonists are tertiary main characters and we wanted to evaluate how the identity of a tritagonist could affect the change in abundance of a taxa pair. We observed that the presence of a Methylobacterium influenced the abundance of a taxa pair, in which MM+M were the most affected, while MS and SS were less so. The prescence of a Sphingomonas did not change the abundance of a taxa pair, except for SpFA2, in which its presence was associated to a larger decrease in the abundance of MM pairs compared to MS pairs, suggesting that SpFA2 could have detrimental effects for non-sphingomonads pairs.
+
+
+```{r}
+# Heatmaps pairs plots
+plt1_pair <- pair_S3 %>% 
+    group_by(synID, dpi, pair, taxa_pair, taxa_excluded) %>% 
+    summarise(fc_pair = mean(fc_pair), .groups = "drop") %>% 
+    ggplot(., aes(x = fct_reorder(pair, as.numeric(taxa_pair)), y = taxa_excluded))+
+    facet_grid(cols = vars(dpi), scales = "free_x", labeller = labeller(dpi=dpi.lab2))+
+    geom_tile(aes(fill = fc_pair))+
+    geom_text(aes(label = sprintf(fc_pair, fmt = '%#.2f')), size = 2)+
+    theme_rs()+
+    scale_y_discrete(name="Tritagonist taxon", labels = taxa.lab)+
+    scale_x_discrete(name="Strain pair", labels = pair.lab2)+
+    scale_fill_gradientn(name = bquote(Log[2]~"FC"), 
+                         colours = wes_palette("Zissou1"), 
+                         values = c(0,0.5,1), 
+                         limits = c(-8,4), 
+                         breaks = seq(-8,4,4), 
+                         na.value = 'grey90')+
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          strip.text = element_text(face = "plain"),
+          axis.text.y = element_text(face = "italic"),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "bottom")
+
+plt2_pair <- pair_S3 %>% 
+    ggplot(., aes(x = fct_reorder(pair, as.numeric(taxa_pair)), y = excluded))+
+    facet_grid(cols = vars(dpi), scales = "free_x", labeller = labeller(dpi=dpi.lab2))+
+    geom_tile(aes(fill = fc_pair))+
+    geom_text(aes(label = sprintf(fc_pair, fmt = '%#.2f')), size = 2)+
+    theme_rs()+
+    scale_y_discrete(name="Tritagonist strain", labels = sp.lab)+
+    scale_x_discrete(name="Strain pair", labels = pair.lab2)+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+    scale_fill_gradientn(name = bquote(Log[2]~"FC"), 
+                         colours = wes_palette("Zissou1"), 
+                         values = c(0,0.5,1), 
+                         limits = c(-8,4), 
+                         breaks = seq(-8,4,4), 
+                         na.value = 'grey90')+
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          strip.text = element_text(face = "plain"),
+          panel.spacing = unit(0.5, "lines"),
+          legend.position = "bottom")
+
+wrap_plots(plt1_pair, plt2_pair, ncol = 1)+
+    plot_annotation(tag_levels = "A") + 
+    plot_layout(guides = "collect",
+                heights = c(2,5)) &
+    theme(legend.box.just = "left",
+          legend.position = "bottom",
+          panel.spacing.x = unit(0.5, "lines"),
+          plot.margin = margin(1,1,0,1),
+          plot.tag = element_text(size = 7)) &
+    guides(fill = guide_colorbar(title.position="top", title.hjust = 0.5, barheight = unit(0.1, 'in')))
+
+# Save plot  
+ggsave(here("results", "figure_x3.png"), width = 6, height = 4)
+ggsave(here("results", "figure_x3.pdf"), width = 6, height = 4)
+
+```
+
+### Relative and total abundance data
+
+```{r}
+datatest <- split(data_cfu, list(data_cfu$dpi, data_cfu$syncom))
+
+relative_fractions_list <- lapply(datatest, function(df) {
+    df %>%
+        group_by(dpi, synID, syncom, taxa, strain) %>% 
+        summarise(cfu = median(cfu), .groups = "drop") %>% 
+        mutate(relative_fraction = cfu / sum(cfu))
+    })
+
+relative_fractions <- do.call(rbind, relative_fractions_list) %>% 
+    filter(synID != "C" & dpi == "14dpi")
+
+plt_relfraction_taxa <- relative_fractions %>%
+    ggplot(., aes(x = syncom, y = relative_fraction, fill = taxa))+
+    facet_grid(cols = vars(dpi), scales = "free", labeller = labeller(dpi = dpi.lab2))+
+    geom_col()+
+    scale_fill_manual(name = "Taxa", values = taxa.pal, labels = taxa.lab)+
+    theme_rs()+
+    theme(legend.text = element_text(face = "italic"))
+
+plt_relfraction_strain <- relative_fractions %>% 
+    ggplot(., aes(x = syncom, y = relative_fraction, fill = strain))+
+    facet_grid(cols = vars(dpi), scales = "free", labeller = labeller(dpi = dpi.lab2))+
+    geom_col()+
+    scale_fill_manual(name = "Strain", values = sp.pal, labels = sp.lab)+
+    theme_rs()
+
+wrap_plots(plt_relfraction_taxa, plt_relfraction_strain, ncol = 1)+
+    plot_annotation(tag_levels = "A") &
+    labs(x = "SynCom", y = "Relative fraction") &
+    theme_rs() &
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.box.just = "left",
+        legend.position = "bottom",
+        panel.spacing.x = unit(0.5, "lines"),
+        strip.text = element_text(face = "plain"),
+        plot.margin = margin(1,1,0,1),
+        plot.tag = element_text(size = 7)) &
+    guides(fill = guide_legend(title.position="top", title.hjust = 0.5, barheight = unit(0.1, 'in')))
+
+# Save plot  
+ggsave(here("results", "figure_x4.png"), width = 4, height = 4)
+ggsave(here("results", "figure_x4.pdf"), width = 4, height = 4)
+
+```
+
+### Use numeric output instead of heatmaps
+
+```{r}
+fc_cfu <- data_cfu %>% 
+    group_by(synID, syncom, strain, dpi, taxa) %>% 
+    summarise(m = median(cfu), .groups="drop") %>% 
+    inner_join(., data_median_control, by = c("strain", "dpi")) %>%
+    filter(synID != "C" & dpi == "14dpi") %>% 
+    mutate(fold = log2(m/m_mono))
+
+dunn_cfu_taxa = data_cfu %>% 
+    filter(dpi == "14dpi") %>% 
+    group_by(taxa) %>% 
+    dunn_test(cfu_log ~ synID, p.adjust.method = "BH") %>% 
+    mutate(p.adj.signif = ifelse(p.adj < 0.05, "*", "ns")) %>% 
+    add_xy_position(x = "synID")
+
+##
+plt_cfu <- data_cfu %>% 
+    ggplot(aes(fct_rev(synID), cfu_log))+
+    facet_grid(cols = vars(taxa), labeller = labeller(taxa = taxa.lab))+
+    geom_jitter(width = 0.1, alpha = 0.1, size = 0.5)+
+    geom_boxplot(aes(fill = synID), width = 0.2, outlier.alpha = 0, alpha = 0.9, size = 0.2)+
+    add_pvalue(data = dunn_cfu_taxa, label = "p.adj.signif",
+               xmin = "xmin", xmax = "xmax", tip.length = 0.01, 
+               fontface = "italic", lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
+    scale_y_continuous(limits = c(3.5, 10.2), breaks = c(4, 6, 8, 10))+
+    scale_fill_manual(name = "SynCom", values = syn.pal, labels = syn.lab)+
+    labs(y = plt_bac_density_lab,
+         x = "SynCom")+
+    theme_rs()+
+    coord_flip()+
+    theme(axis.text.x = element_text(hjust = 0.5, vjust = 1.5),
+          strip.text.x = element_text(face = "plain"))+
+    guides(fill = guide_legend(title.position="top", title.hjust = 0.5, barheight = unit(0.1, 'in')))
+
+##
+dunn_taxa_dpi <- fc_cfu %>% 
+    group_by(dpi, taxa) %>% 
+    dunn_test(fold ~ synID, p.adjust.method = "BH") %>% 
+    mutate(p.adj.signif = ifelse(p.adj < 0.05, "*", "ns")) %>% 
+    add_xy_position(x = "taxa", dodge = 0.45)
+
+fc_cfu_taxa <- fc_cfu %>% 
+    ggplot(aes(x = taxa, y = fold))+
+    geom_hline(yintercept = 0, linetype = 2, linewidth = 0.3)+
+    geom_jitter(aes(fill = fct_rev(synID)), alpha = 0.2, size = 0.5, 
+                position = position_jitterdodge(jitter.width = 0.3, dodge.width = 0.45))+
+    geom_boxplot(aes(fill = fct_rev(synID)), 
+                 outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.45)+
+    add_pvalue(dunn_taxa_dpi, label = "p.adj.signif", 
+               xmin = "xmin", xmax = "xmax", tip.length = 0.01, 
+               fontface = "italic", lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
+    coord_flip()+
+    scale_x_discrete(name = "", labels = taxa.lab)+
+    scale_y_continuous(name = bquote(Log[2]~"FC Bacterial density"), 
+                       limits = c(-10, 8))+
+    scale_fill_manual(name = "SynCom", values = syn.pal[3:2], labels = syn.lab)+
+    theme_rs()+
+    guides(fill = "none")+
+    theme(axis.text.x = element_text(hjust = 0.5, vjust = 3),
+          axis.text.y = element_text(face = "italic"),
+          strip.text = element_text(face = "plain"),
+          legend.position = "bottom")
+
+## 
+dunn_strain_dpi <- fc_cfu %>% 
+    group_by(dpi, strain) %>% 
+    dunn_test(fold ~ synID, p.adjust.method = "BH") %>% 
+    mutate(p.adj.signif = ifelse(p.adj < 0.05, "*", "ns")) %>% 
+    add_xy_position(x = "strain", dodge = 0.9)
+
+fc_cfu_strain <- fc_cfu %>% 
+    ggplot(aes(x = strain, y = fold))+
+    geom_hline(yintercept = 0, linetype = 2, linewidth = 0.3)+
+    geom_jitter(aes(fill = fct_rev(synID)), alpha = 0.2, size = 0.5, 
+                position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9))+
+    geom_boxplot(aes(fill = fct_rev(synID)), outlier.alpha = 0, 
+                 alpha = 0.9, size = 0.2, width = 0.9)+
+    add_pvalue(dunn_strain_dpi, label = "p.adj.signif", 
+               xmin = "xmin", xmax = "xmax", tip.length = 0.01, 
+               fontface = "italic", lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
+    coord_flip()+
+    scale_x_discrete(name = "", labels = sp.lab)+
+    scale_y_continuous(name = bquote(Log[2]~"FC Bacterial density"), 
+                       limits = c(-10, 8))+
+    scale_fill_manual(name = "SynCom", values = syn.pal[3:2], labels = syn.lab)+
+    theme_rs()+
+    guides(fill = "none")+
+    theme(axis.text.x = element_text(hjust = 0.5, vjust = 3),
+          strip.text = element_text(face = "plain"),
+          legend.position = "bottom")
+
+wrap_plots(plt_cfu, fc_cfu_taxa + fc_cfu_strain, ncol = 1)+
+    plot_annotation(tag_levels = "A") + 
+    plot_layout(guides = "collect",
+                heights = c(1,1)) &
+    theme(legend.box.just = "left",
+          legend.position = "bottom",
+          panel.spacing.x = unit(0.5, "lines"),
+          plot.margin = margin(1,1,0,1),
+          plot.tag = element_text(size = 7))
+
+# Save plot 
+ggsave(here("results", "figure_x5.png"), width = 6, height = 5)
+ggsave(here("results", "figure_x5.pdf"), width = 6, height = 5)
+
+```
