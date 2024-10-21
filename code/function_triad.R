@@ -39,6 +39,13 @@ process_triad <- function(subset_df, cell) {
                                         excluded = NA,
                                         sum = sum(cfu))
         results <- pair_combinations
+        
+    } else if (length(strain) == 1) {
+        # If only two objects, handle as a pair
+        pair_combinations <- data.frame(strain1 = strain[1], strain2 = NA, 
+                                        excluded = NA,
+                                        sum = sum(cfu))
+        results <- pair_combinations
     }
     return(results)
 }
