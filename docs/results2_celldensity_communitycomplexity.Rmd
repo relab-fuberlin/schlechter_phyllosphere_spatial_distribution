@@ -26,7 +26,9 @@ library(car)
 ## Data visualisation
 library(ggdist)
 library(ggpubr)
+library(ggprism)
 library(patchwork)
+library(grid)
 
 # Dependencies
 source(here('code', 'palette_syncom.R'))
@@ -245,8 +247,7 @@ We were asked to analyse the change in bacterial abundance within the three two-
 
 ```{r}
 # Split the data
-split_data <- data_cell %>% 
-    split(.,
+split_data <- split(data_cell,
           list(.$synID, .$syncom, .$exp, .$rep, .$dpi), 
           drop = TRUE, sep = "_")
 
@@ -306,16 +307,16 @@ contrast_list <- lapply(emm_list, cld, alpha = 0.05, Letters = letters, adjust =
 # Plot
 plt_cell_taxa_pair <- cell_pair_full %>% 
     filter(synID != "C") %>% 
-    ggplot(., aes(taxa_pair, log_cell, fill = synID))+
+    ggplot(., aes(taxa_pair, log_cell, fill = fct_rev(synID)))+
     facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
-    geom_jitter(aes(group = synID), 
+    geom_jitter(aes(group = fct_rev(synID)), 
                 position = position_jitterdodge(jitter.width = 0.45, dodge.width = 0.9), 
                 alpha = 0.2, size = 0.5)+
     geom_boxplot(outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.9)+
     geom_text(data = contrast_list, aes(label = .group, y = 9.5, group = synID), 
               size = 2, position = position_dodge(width = 0.9))+
     scale_y_continuous(limits = c(3, 9.8), breaks = c(4, 6, 8, 10))+
-    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], label = syn.lab)+
+    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], breaks = syn.lab[2:3])+
     theme_rs()+
     coord_flip()+
     labs(y = plt_bac_density_lab,
@@ -351,15 +352,15 @@ plt_cell_strain_pair <- cell_pair_full %>%
     filter(synID != "C") %>% 
     ggplot(., aes(fct_reorder(pair, as.numeric(taxa_pair)), log_cell))+
     facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
-    geom_jitter(aes(fill = synID), 
+    geom_jitter(aes(fill = fct_rev(synID)), 
                 position = position_jitterdodge(jitter.width = 0.45, dodge.width = 0.9), 
                 alpha = 0.2, size = 0.5)+
-    geom_boxplot(aes(fill = synID), outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.9)+
+    geom_boxplot(aes(fill = fct_rev(synID)), outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.9)+
     geom_text(data = contrast_pair, aes(label = p.adj.signif, y = 9.5), 
               size = 2, position = position_dodge(width = 0.9))+
     scale_x_discrete(labels = pair.lab2)+
     scale_y_continuous(limits = c(3, 9.8), breaks = c(4, 6, 8, 10))+
-    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], labels = syn.lab)+
+    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], breaks = syn.lab[2:3])+
     theme_rs()+
     coord_flip()+
     labs(y = plt_bac_density_lab,
@@ -595,8 +596,8 @@ wrap_plots(plt_cell, fc_cell_taxa + fc_cell_strain, ncol = 1)+
           plot.tag = element_text(size = 7))
 
 # Save plot 
-ggsave(here("results", "figure_x7.png"), width = 6, height = 5)
-ggsave(here("results", "figure_x7.pdf"), width = 6, height = 5)
+ggsave(here("results", "figure_x7.png"), width = 6, height = 4)
+ggsave(here("results", "figure_x7.pdf"), width = 6, height = 4)
 
 ```
 

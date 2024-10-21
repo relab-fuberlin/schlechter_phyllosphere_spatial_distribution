@@ -27,7 +27,9 @@ library(multcomp)
 # Plotting 
 library(ggdist)
 library(ggpubr)
+library(ggprism)
 library(patchwork)
+library(grid)
 
 # Other dependencies
 source(here('code', 'palette_syncom.R'))
@@ -375,7 +377,7 @@ split_data <- split(data_cfu,
                     sep = "_")
 
 # Apply the function to each group
-result_list <- lapply(split_data, process_triad)
+result_list <- lapply(split_data, process_triad, "cfu")
 
 # Combine the results into a single dataframe
 final_result <- do.call(rbind, result_list)
@@ -430,16 +432,16 @@ contrast_list <- lapply(emm_list, cld, alpha = 0.05, Letters = letters, adjust =
 # Plot
 plt_cfu_taxa_pair <- cfu_pair_full %>% 
     filter(synID != "C") %>% 
-    ggplot(., aes(taxa_pair, log_cfu, fill = synID))+
+    ggplot(., aes(taxa_pair, log_cfu, fill = fct_rev(synID)))+
     facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
-    geom_jitter(aes(group = synID), 
+    geom_jitter(aes(group = fct_rev(synID)), 
                 position = position_jitterdodge(jitter.width = 0.45, dodge.width = 0.9), 
                 alpha = 0.2, size = 0.5)+
     geom_boxplot(outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.9)+
-    geom_text(data = contrast_list, aes(label = .group, y = 9.5, group = synID), 
+    geom_text(data = contrast_list, aes(label = .group, y = 9.5, group = fct_rev(synID)), 
               size = 2, position = position_dodge(width = 0.9))+
     scale_y_continuous(limits = c(4, 9.8), breaks = c(4, 6, 8, 10))+
-    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], label = syn.lab)+
+    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], breaks = c("S2", "S3"))+
     theme_rs()+
     coord_flip()+
     labs(y = plt_bac_density_lab,
@@ -480,15 +482,15 @@ plt_cfu_strain_pair <- cfu_pair_full %>%
     filter(synID != "C") %>% 
     ggplot(., aes(fct_reorder(pair, as.numeric(taxa_pair)), log_cfu))+
     facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
-    geom_jitter(aes(fill = synID), 
+    geom_jitter(aes(fill = fct_rev(synID)), 
                 position = position_jitterdodge(jitter.width = 0.45, dodge.width = 0.9), 
                 alpha = 0.2, size = 0.5)+
-    geom_boxplot(aes(fill = synID), outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.9)+
+    geom_boxplot(aes(fill = fct_rev(synID)), outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.9)+
     geom_text(data = contrast_pair, aes(label = p.adj.signif, y = 9.5), 
               size = 2, position = position_dodge(width = 0.9))+
     scale_x_discrete(labels = pair.lab2)+
     scale_y_continuous(limits = c(4, 9.8), breaks = c(4, 6, 8, 10))+
-    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], labels = syn.lab)+
+    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], breaks = c("S2", "S3"))+
     theme_rs()+
     coord_flip()+
     labs(y = plt_bac_density_lab,
@@ -816,8 +818,8 @@ plt_cfu <- data_cfu %>%
     geom_jitter(width = 0.1, alpha = 0.1, size = 0.5)+
     geom_boxplot(aes(fill = synID), width = 0.2, outlier.alpha = 0, alpha = 0.9, size = 0.2)+
     add_pvalue(data = dunn_cfu_taxa, label = "p.adj.signif",
-               xmin = "xmin", xmax = "xmax", tip.length = 0.01, 
-               fontface = "italic", lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
+               xmin = "xmin", xmax = "xmax", tip.length = 0.01, size = 2,
+               lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
     scale_y_continuous(limits = c(3.5, 10.2), breaks = c(4, 6, 8, 10))+
     scale_fill_manual(name = "SynCom", values = syn.pal, labels = syn.lab)+
     labs(y = plt_bac_density_lab,
@@ -843,8 +845,8 @@ fc_cfu_taxa <- fc_cfu %>%
     geom_boxplot(aes(fill = fct_rev(synID)), 
                  outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.45)+
     add_pvalue(dunn_taxa_dpi, label = "p.adj.signif", 
-               xmin = "xmin", xmax = "xmax", tip.length = 0.01, 
-               fontface = "italic", lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
+               xmin = "xmin", xmax = "xmax", tip.length = 0.01,
+               size = 2, lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
     coord_flip()+
     scale_x_discrete(name = "", labels = taxa.lab)+
     scale_y_continuous(name = bquote(Log[2]~"FC Bacterial density"), 
@@ -873,7 +875,7 @@ fc_cfu_strain <- fc_cfu %>%
                  alpha = 0.9, size = 0.2, width = 0.9)+
     add_pvalue(dunn_strain_dpi, label = "p.adj.signif", 
                xmin = "xmin", xmax = "xmax", tip.length = 0.01, 
-               fontface = "italic", lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
+               size = 2, lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
     coord_flip()+
     scale_x_discrete(name = "", labels = sp.lab)+
     scale_y_continuous(name = bquote(Log[2]~"FC Bacterial density"), 
@@ -896,7 +898,7 @@ wrap_plots(plt_cfu, fc_cfu_taxa + fc_cfu_strain, ncol = 1)+
           plot.tag = element_text(size = 7))
 
 # Save plot 
-ggsave(here("results", "figure_x5.png"), width = 6, height = 5)
-ggsave(here("results", "figure_x5.pdf"), width = 6, height = 5)
+ggsave(here("results", "figure_x5.png"), width = 6, height = 4)
+ggsave(here("results", "figure_x5.pdf"), width = 6, height = 4)
 
 ```
