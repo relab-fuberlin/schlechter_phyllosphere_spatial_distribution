@@ -186,6 +186,6 @@ wrap_plots(pltS5c + pltS5a + pltS5d + pltS5b,
           plot.tag = element_text(size = 7)) &
     guides(fill = guide_legend(title.position = "top", title.hjust = 0.5, barheight = unit(0.1, 'in')))
 
-ggsave(here("results", "revision", "figS5.pdf"), width = 8, height = 5)
+ggsave(here("results", "figS5.pdf"), width = 8, height = 5)
 
 

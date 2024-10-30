@@ -76,5 +76,5 @@ wrap_plots(plt7a, plt7b, ncol = 1)+
           plot.tag = element_text(size = 7))
 
 # Save plot
-ggsave(here("results", "revision", "fig7.pdf"), width = 4, height = 6)
+ggsave(here("results", "fig7.pdf"), width = 4, height = 6)
 

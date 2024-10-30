@@ -125,4 +125,4 @@ wrap_plots(plt2a, plt2b + plt2c, ncol = 1)+
           plot.tag = element_text(size = 7))
 
 # Save plot 
-ggsave(here("results", "revision", "fig2.pdf"), width = 6, height = 5)
+ggsave(here("results", "fig2.pdf"), width = 6, height = 5)

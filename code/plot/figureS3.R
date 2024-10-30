@@ -24,4 +24,4 @@ wrap_plots(plt_relfraction_strain, ncol = 1)+
     guides(fill = guide_legend(title.position="top", title.hjust = 0.5, barheight = unit(0.1, 'in')))
 
 # Save plot  
-ggsave(here("results", "revision", "figS3.pdf"), width = 8, height = 3)
+ggsave(here("results", "figS3.pdf"), width = 8, height = 3)

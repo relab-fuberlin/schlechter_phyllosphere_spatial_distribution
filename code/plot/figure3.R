@@ -103,7 +103,7 @@ wrap_plots(wrap_elements(panel = rectGrob(gp = gpar(fill = 'white'))),
     guides(fill = guide_legend(title.position="top", title.hjust = 0.5, barheight = unit(0.1, 'in')))
 
 ### Save plot
-ggsave(here("results", "revision", "fig3.pdf"), width = 4, height = 5)
+ggsave(here("results", "fig3.pdf"), width = 4, height = 5)
 
 
 
@@ -212,4 +212,4 @@ wrap_plots(wrap_elements(panel = rectGrob(gp = gpar(fill = 'white'))),
 
 
 ### Save plot
-ggsave(here("results", "revision", "figS4.pdf"), width = 4, height = 4)
+ggsave(here("results", "figS4.pdf"), width = 4, height = 4)
