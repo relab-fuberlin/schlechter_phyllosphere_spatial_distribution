@@ -1,11 +1,7 @@
 ---
 title: "Bacterial community complexity in the phyllosphere penalises specialists over generalists - Results Section 4"
 author: "Rudolf Schlechter"
-output: 
-    html_document:
-        df_print: paged
-        keep_md: yes
-    pdf_document: default
+output: html_document
 editor_options: 
   chunk_output_type: console
 ---
@@ -17,6 +13,8 @@ options(digits = 2, scipen = 1, pillar.signif = 3)
 library(here)
 library(tidyverse)
 library(rstatix)
+library(patchwork)
+library(ggh4x)
 
 source(here('code', 'palette_syncom.R'))
 source(here('code', 'theme_rs_spatial.R'))
@@ -24,11 +22,11 @@ source(here('code', 'theme_rs_spatial.R'))
 #Data
 source(here('code', 'spat_pcf_fractions_auc.R'))
 source(here('code', 'function_fractional_change_median.R'))
-auc_fold_change <- auc_fold_change %>% 
+G_auc_fold_change <- G_auc_fold_change %>% 
     mutate(taxa_type = case_when(
         taxa_pair == "MM" | taxa_pair == "SS" ~ "within",
         taxa_pair == "MS" ~ "between"))
-auc_aggregation <- auc_fold_change %>% filter(type == "aggregate_fraction")
+G_auc_aggregation <- G_auc_fold_change %>% filter(type == "aggregate_fraction")
 
 
 set.seed(19900725)
@@ -40,24 +38,24 @@ We investigated the effect of community complexity on the spatial patterns betwe
 
 ```{r analysis_type}
 ## Summary
-summary_type <- fractional_change_median(auc_fold_change, group = "type")
+summary_type <- fractional_change_median(G_auc_fold_change, group = "type")
 
 ## Kruskal-Wallis
-kw_type <- auc_fold_change %>% 
+kw_type <- G_auc_fold_change %>% 
     kruskal_test(fractional_change ~ type) %>% 
     mutate(
         p_size = case_when(p < 0.05 ~ 0.05, TRUE ~ p),
         p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
 
-kw_eff_type <- auc_fold_change %>% 
+kw_eff_type <- G_auc_fold_change %>% 
     kruskal_effsize(fractional_change ~ type, ci=TRUE, nboot=100)
 
 ## Dunn's test
-dunn_type <- auc_fold_change %>% 
+dunn_type <- G_auc_fold_change %>% 
     dunn_test(fractional_change ~ type, p.adjust.method = "holm")
 
 ## One-sample Wilcoxon test
-w1_type <-  auc_fold_change %>% 
+w1_type <-  G_auc_fold_change %>% 
     group_by(type) %>% 
     wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
     dplyr::select(type, estimate, statistic, p) %>% 
@@ -71,10 +69,10 @@ In general, we observed that pairs of species aggregated within S2 communities a
 
 ```{r analysis_dpi}
 ## Summary
-summary_dpi <- fractional_change_median(auc_fold_change, group=c("dpi", "type"))
+summary_dpi <- fractional_change_median(G_auc_fold_change, group=c("dpi", "type"))
 
 ## One sample Wilcoxon test
-w1_dpi = auc_fold_change %>% 
+w1_dpi = G_auc_fold_change %>% 
     group_by(dpi, type) %>% 
     wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
     dplyr::select(dpi, type, estimate, statistic, p) %>% 
@@ -83,7 +81,7 @@ w1_dpi = auc_fold_change %>%
         p_label = case_when(p < 0.05 ~ "< 0.05", TRUE ~ as.character(p)))
 
 ## Two samples Wilcoxon test
-w2_dpi <- auc_fold_change %>% 
+w2_dpi <- G_auc_fold_change %>% 
     group_by(type) %>% 
     wilcox_test(fractional_change ~ dpi, p.adjust.method = "holm", detailed=TRUE)
 ```
@@ -94,7 +92,7 @@ Our findings collectively indicate that *Methylobacterium* species are more susc
 
 ```{r analysis_taxa_strain}
 ## One sample Wilcoxon test for taxa pairs
-w1_taxa <-  auc_fold_change %>% 
+w1_taxa <-  G_auc_fold_change %>% 
     group_by(dpi, type, taxa_pair) %>% 
     wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
     dplyr::select(dpi, type, taxa_pair, estimate, statistic, p) %>% 
@@ -104,17 +102,17 @@ w1_taxa <-  auc_fold_change %>%
 w1_taxa %>% filter(p_label == "*")
 
 ## Kruskal-Wallis test for taxa pairs
-kw_taxa <- auc_fold_change %>% 
+kw_taxa <- G_auc_fold_change %>% 
     group_by(type, dpi) %>% 
     kruskal_test(fractional_change ~ taxa_pair)
 
-dunn_taxa <- auc_fold_change %>% 
+dunn_taxa <- G_auc_fold_change %>% 
     group_by(type, dpi) %>% 
     dunn_test(fractional_change ~ taxa_pair, p.adjust.method = "holm", detailed = TRUE) %>% 
     filter(p.adj < 0.05)
 
 ## Two samples Wilcoxon  test for taxa pairs over time
-w2_dpi_taxa <- auc_fold_change %>% 
+w2_dpi_taxa <- G_auc_fold_change %>% 
     group_by(type, taxa_pair) %>% 
     wilcox_test(fractional_change ~ dpi, p.adjust.method = "holm", detailed = TRUE)
 
@@ -123,23 +121,23 @@ w2_dpi_taxa <- auc_fold_change %>%
 
 ```{r, include = FALSE}
 ## Kruskal Wallis test for strain pairs
-kw_strain <- auc_fold_change %>% 
+kw_strain <- G_auc_fold_change %>% 
     group_by(type, dpi) %>% 
     kruskal_test(fractional_change ~ strain_pair)
 
-dunn_strain <- auc_fold_change %>% 
+dunn_strain <- G_auc_fold_change %>% 
     group_by(type, dpi) %>% 
     dunn_test(fractional_change ~ strain_pair, p.adjust.method = "holm", detailed = TRUE) %>% 
     dplyr::select(dpi, type, group1, group2, p, p.adj, p.adj.signif)
 
 ## Two samples Wilcoxon test for strain pairs
-w2_strain <- auc_fold_change %>% 
+w2_strain <- G_auc_fold_change %>% 
     group_by(type, dpi) %>% 
     wilcox_test(fractional_change ~ strain_pair, p.adjust.method = "holm", detailed = TRUE)
 w2_strain %>% filter(p.adj < 0.05)
 
 ## One sample Wilcoxon test for strain pairs
-w1_strain  <-  auc_fold_change %>% 
+w1_strain  <-  G_auc_fold_change %>% 
     group_by(dpi, strain_pair, type) %>% 
     wilcox_test(fractional_change ~ 1, mu = 0, p.adjust.method = "holm", detailed = TRUE) %>% 
     dplyr::select(dpi, strain_pair, type, estimate, statistic, p) %>% 
@@ -151,18 +149,18 @@ w1_strain %>% filter(p < 0.05)
 
 ```{r, include = FALSE}
 ## Kruskal Wallis test for  Syncom
-kw_syncom <- auc_fold_change %>% 
+kw_syncom <- G_auc_fold_change %>% 
     group_by(type, dpi) %>% 
     kruskal_test(fractional_change ~ syncom)
 
 ## Two samples Wilcoxon test for SynCom
-w2_syncom <- auc_fold_change %>% 
+w2_syncom <- G_auc_fold_change %>% 
     group_by(type, dpi) %>% 
     wilcox_test(fractional_change ~ syncom, p.adjust.method = "holm", detailed = TRUE) %>% 
     filter(p.adj < 0.05)
 
 ## One sample Wilcoxon test for SynCom
-w1_syncom <-  auc_fold_change %>% 
+w1_syncom <-  G_auc_fold_change %>% 
     group_by(dpi, type, syncom) %>% 
     wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
     dplyr::select(dpi, type, syncom, estimate, statistic, p) %>% 
@@ -175,7 +173,7 @@ w1_syncom %>% filter(p_label == "*")
 ## Plots
 
 ```{r, include = FALSE}
-plt.frq <- fractions %>% 
+plt.frq <- G_fractions %>% 
     group_by(taxa_pair, synID, dpi, type, r) %>% 
     summarise(mean_fraction = mean(fraction), .groups="drop") %>% 
     mutate(index = case_when(
@@ -199,7 +197,7 @@ plt.frq <- fractions %>%
           strip.text.y = element_text(angle=0, vjust = 0.5, hjust = 0, face = "plain"),
           legend.position = "bottom")
 
-plt.pattern <- left_join(auc_fold_change, w1_taxa, by = c("dpi", "type", "taxa_pair")) %>% 
+plt.pattern <- left_join(G_auc_fold_change, w1_taxa, by = c("dpi", "type", "taxa_pair")) %>% 
     mutate(index = case_when(
         type == "regular_fraction" ~ 1,
         type == "random_fraction" ~ 2,
@@ -227,15 +225,15 @@ plt.frq + wrap_elements(plot = plt.pattern) +
           plot.tag = element_text(size = 7))
 
 # Save plot
-ggsave(here("results", "figure_6.png"), width = 6.89, height = 2.5)
-ggsave(here("results", "figure_6.tiff"), width = 6.89, height = 2.5)
+#ggsave(here("results", "figure_6.png"), width = 6.89, height = 2.5)
+#ggsave(here("results", "figure_6.tiff"), width = 6.89, height = 2.5)
 
 ```
 
 ### Supplemental Figure
 
 ```{r plot_sup_freq_all, include=FALSE}
-fractions_pairs <- fractions %>% 
+fractions_pairs <- G_fractions %>% 
     group_by(strain_pair, syncom, synID, dpi, type, r) %>% 
     summarise(mean_fraction = mean(fraction), .groups="drop") %>% 
     mutate(index = case_when(
@@ -282,7 +280,7 @@ wrap_plots(list_plot, ncol = 5, guides = "collect")+
           plot.margin = margin(1,0,1,0))
 
 # Save plot
-ggsave(here("results", "figure_s5.png"), width = 6.89, height = 5)
-ggsave(here("results", "figure_s5.tiff"), width = 6.89, height = 5)
+#ggsave(here("results", "figure_s5.png"), width = 6.89, height = 5)
+#ggsave(here("results", "figure_s5.tiff"), width = 6.89, height = 5)
 
 ```
