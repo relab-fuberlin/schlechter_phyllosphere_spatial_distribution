@@ -1,5 +1,5 @@
 # Bacterial community complexity in the phyllosphere penalises specialists over generalists
-Spatial distribution analysis of syntehtic bacterial communities (SynCom) on the _Arabidopsis thaliana_ leaf surface.
+Spatial distribution analysis of synthetic bacterial communities (SynCom) on the _Arabidopsis thaliana_ leaf surface.
 This repository contains the scripts used to analyse the data published in: xxxxxx 
 Raw data is storaged in [Zenodo](https://zenodo.org/doi/10.5281/zenodo.100361160):
 File | Data type | Content
@@ -16,10 +16,14 @@ First, you need to clone this repository
 git clone https://github.com/roschlec/schlechter_phyllosphere_spatial_distribution.git
 ```
 Now you have all the codes to run!
-It is advisable to run these codes in a conda environment. The file `environment.yml` will help you create an environment will the necessary packages. We recommend using [mamba](https://mamba.readthedocs.io/en/latest/index.html).
+
+For reproducibility in data analysis, a renv.lock file is available to install and load all R packages (and corresponding versions) used in this paper.
+
+In R:
 ```
-mamba env create -f environment.yml
-conda activate spatial
+install.packages("renv")
+library(renv)
+renv::restore()
 ```
 ## Download datasets
 To download the datasets associated to the manuscript, run the following command in your terminal.
@@ -34,27 +38,31 @@ code/bash_download.sh
 ```
 You can also download the datasets manually in [Zenodo](https://zenodo.org/doi/10.5281/zenodo.100361160).
 ## Changes in taxon-specific population density correlate with community complexity
-Scripts used to generate docs/results1_bacdensity_communitycomplexity.Rmd
+Scripts used to generate `docs/01_CFU.Rmd`
 ```
 code/bash_script1.sh data
 ```
 This script will analyse the CFU data and create a `results` directory to store the processed data.
 Additionally, the Rmarkdown containing the data analysis and plots will be rendered.
 ## Spatial distribution of individual strains depends on their community context
-Scripts used to generate `docs/results2_celldensity_communitycomplexity.Rmd`
+Scripts used to generate `docs/02_celldensity.Rmd`
 ```
 code/bash_script2.sh
 ```
 This script will analyse the single-cell data. Additionally, the Rmarkdown containing the data analysis and plots will be rendered.
 ## Effect of community complexity on intraspecific spatial relations
-Scripts used to generate `docs/results3_Kest_communitycomplexity.Rmd`
+Scripts used to generate `docs/03_Intraspecific_spatial.Rmd`
 ```
 code/bash_script3.sh
 ```
 Using coordinate data, this script will perform the spatial analysis (K-estimates) within each population. Additionally, the Rmarkdown containing the data analysis and plots will be rendered.
 ## Effect of community complexity on interspecific spatial correlations
-Scripts used to generate `docs/results4_PCF_communitycomplexity.Rmd`
+Scripts used to generate `docs/04_Interspecific_spatial.Rmd`
 ```
 code/bash_script4.sh
 ```
 Using coordinate data, this script will perform the spatial analysis (pair cross-correlation) between populations. Additionally, the Rmarkdown containing the data analysis and plots will be rendered.
+## Resubmission
+```
+code/bash_resubmission.sh
+```
