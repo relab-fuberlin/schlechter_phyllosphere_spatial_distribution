@@ -11,7 +11,7 @@ pltS3 <- relative_fractions %>%
     scale_fill_manual(name = "Strain", values = sp.pal, labels = sp.lab)+
     scale_x_discrete(name = "", labels = label)
 
-wrap_plots(plt_relfraction_strain, ncol = 1)+
+wrap_plots(pltS3, ncol = 1)+
     labs(x = "SynCom", y = "Relative fraction") &
     theme_rs() &
     theme(
