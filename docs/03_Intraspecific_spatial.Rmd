@@ -86,8 +86,10 @@ The observed distribution patterns were consistent across the two time points. T
 
 ```{r analysis_taxa_strain}
 ## Summary
-summary_taxa <- fractional_change_median(K_auc_aggregation, group=c("taxa", "dpi"))
-summary_strain <-  fractional_change_median(K_auc_aggregation, group = c("strain", "dpi")) %>% 
+summary_taxa <- fractional_change_median(K_auc_aggregation, 
+                                         group=c("taxa", "dpi"))
+summary_strain <-  fractional_change_median(K_auc_aggregation, 
+                                            group = c("strain", "dpi")) %>% 
     filter(dpi == "07dpi")
 
 ## Two samples Wilcoxon test for taxa (Methylobacterium vs Sphingomonas)
