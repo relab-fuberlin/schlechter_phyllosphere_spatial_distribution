@@ -42,7 +42,7 @@ plt3b <- fold_change_S3 %>%
     geom_boxplot(aes(fill = tritagonist),
                  outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.8)+
     add_pvalue(data = p_value_plt3b, 
-               y.position = 0.1, step.increase = 0.02,
+               y.position = 3, step.increase = -0.02,
                label = "p.adj.signif", xmin = "xmax", xmax = "xmin", 
                tip.length = 0.005, size = 2, bracket.shorten = -0.01,
                lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
@@ -70,7 +70,7 @@ plt3c <- fold_change_S3 %>%
                  position = position_dodge2(width = 0.75, 
                                             preserve = "single"))+
     add_pvalue(data = p_value_plt3c,
-               y.position = 0.1, step.increase = 0.02,
+               y.position = 3, step.increase = -0.02,
                label = "p.adj.signif", xmin = "xmax", xmax = "xmin", 
                tip.length = 0.005, size = 2, bracket.shorten = -0.01,
                lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
@@ -95,7 +95,8 @@ wrap_plots(wrap_elements(panel = rectGrob(gp = gpar(fill = 'white'))),
           legend.position = "bottom",
           panel.spacing.x = unit(0.5, "lines"),
           plot.margin = margin(1,1,0,1),
-          plot.tag = element_text(size = 7)) &
+          plot.tag = element_text(size = 7),
+          rect = element_rect(fill = "transparent")) &
     guides(fill = guide_legend(title.position="top", title.hjust = 0.5, barheight = unit(0.1, 'in')))
 
 ### Save plot
