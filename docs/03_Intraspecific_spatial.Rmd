@@ -94,7 +94,7 @@ summary_strain <-  fractional_change_median(K_auc_aggregation,
 
 ## Two samples Wilcoxon test for taxa (Methylobacterium vs Sphingomonas)
 w2_taxa <- K_auc_aggregation %>% 
-    group_by(dpi) %>% 
+    group_by(dpi, synID) %>% 
     wilcox_test(fractional_change ~ taxa, p.adjust.method = "holm", detailed = TRUE)
 
 ## One sample Wilcoxon test for taxa (Methylobacterium vs Sphingomonas)
