@@ -3,25 +3,25 @@
 ##  Plot 6 - Intraspecific spatial patterns
 
 ### p-values
-w1_taxa <-  K_auc_aggregation %>% 
-    group_by(synID, dpi, taxa) %>% 
-    wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
-    add_xy_position(x = "taxa", 
-                    dodge = 0.75) %>% 
+w2_taxa <-  K_auc_aggregation %>% 
+    mutate(synID = fct_rev(synID)) %>% 
+    group_by(synID, dpi) %>% 
+    wilcox_test(fractional_change ~ taxa, detailed = TRUE) %>% 
+    add_y_position() %>% 
     mutate(p.adj.signif = ifelse(p < 0.05, "*", "ns"),
            y.position = y.position * 100) %>% 
     filter(p.adj.signif != "ns")
 
-w1_strain  <-  K_auc_aggregation %>% 
-    group_by(synID, dpi, strain) %>% 
-    wilcox_test(fractional_change ~ 1, mu = 0, detailed = TRUE) %>% 
-    add_xy_position(x = "strain") %>% 
-    mutate(p.adj.signif = ifelse(p < 0.05, "*", "ns"),
-           y.position = y.position * 100) %>% 
+w2_strain  <-  K_auc_aggregation %>% 
+    group_by(synID, dpi) %>% 
+    dunn_test(fractional_change ~ strain, p.adjust.method = "holm") %>% 
+    add_y_position(step.increase = 0.03) %>% 
+    mutate(p.adj.signif = ifelse(p.adj < 0.05, "*", "ns"),
+           y.position = y.position * 100 + 10) %>% 
     filter(p.adj.signif != "ns")
 
 ### Plots
-plt6a <- fractions %>% 
+plt6a <- K_fractions %>% 
     group_by(taxa, synID, dpi, type, r) %>% 
     summarise(mean_fraction = mean(fraction), .groups="drop") %>% 
     mutate(index = case_when(
@@ -42,16 +42,43 @@ plt6a <- fractions %>%
                        breaks = seq(0,1,0.5))+
     scale_fill_manual(name = "Spatial Pattern", labels = pattern.lab, values = pattern.pal)+
     theme_rs()+
-    theme(aspect.ratio = 1, 
-          panel.spacing.x = grid::unit(0.25, "line"),
+    theme(panel.spacing.x = grid::unit(0.25, "line"),
           panel.spacing.y = grid::unit(0.5, "line"),
           strip.text.x = element_text(margin = margin(b = 1, t = 5), face = "plain"),
           strip.text.y = element_text(angle = 0, vjust = 0.5, hjust = 0),
           legend.position = "bottom")
 
-plt6b <- auc_aggregation %>% 
+plt6b <- K_auc_aggregation %>% 
     ggplot(aes(x = taxa, y = fractional_change*100))+
-    facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
+    facet_grid(cols = vars(dpi), rows = vars(synID),
+               labeller = labeller(dpi = dpi.lab2))+
+    geom_hline(yintercept = 0, linetype = 2, linewidth = 0.3)+
+    geom_jitter(aes(fill = fct_rev(synID)), 
+                alpha = 0.5, size = 0.5, 
+                position = position_jitterdodge(jitter.width = 0.2, 
+                                                dodge.width = 0.8))+
+    geom_boxplot(aes(fill = fct_rev(synID)),
+                 outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.4)+
+    add_pvalue(w2_taxa, 
+               xmin = "group1", xmax = "group2", label = "p.adj.signif",
+               tip.length = 0.005, size = 2, lineend = "round", 
+               bracket.size = 0.2, coord.flip = TRUE)+
+    coord_flip()+
+    scale_x_discrete(name = "", labels = taxa.lab)+
+    scale_y_continuous(name = "Change in spatial aggregation [%]", 
+                       limits = c(-100, 40))+
+    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], breaks = c("S2", "S3"))+
+    theme_rs()+
+    theme(axis.text.x = element_text(hjust = 0.5, vjust = 3),
+          axis.text.y = element_text(face = "italic"),
+          strip.text.x = element_text(face = "plain"),
+          strip.text.y = element_blank(),
+          legend.position = "bottom")
+
+plt6c <- K_auc_aggregation %>% 
+    ggplot(aes(x = strain, y = fractional_change * 100, fill = synID))+
+    facet_grid(cols = vars(dpi), rows = vars(synID),
+               labeller = labeller(dpi = dpi.lab2))+
     geom_hline(yintercept = 0, linetype = 2, linewidth = 0.3)+
     geom_jitter(aes(fill = fct_rev(synID)), 
                 alpha = 0.5, size = 0.5, 
@@ -59,49 +86,34 @@ plt6b <- auc_aggregation %>%
                                                 dodge.width = 0.8))+
     geom_boxplot(aes(fill = fct_rev(synID)),
                  outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.8)+
-    geom_text(data = w1_taxa, aes(label = p.adj.signif, y = y.position + 10, group = fct_rev(synID)),
-              position = position_dodge(width = 0.75), size = 6)+
-    coord_flip()+
-    scale_x_discrete(name = "", labels = taxa.lab)+
-    scale_y_continuous(name = "Change in spatial aggregation [%]", 
-                       limits = c(-100, 50))+
-    scale_fill_manual(name = "SynCom", values = syn.pal[2:3], breaks = c("S2", "S3"))+
-    theme_rs()+
-    theme(axis.text.x = element_text(hjust = 0.5, vjust = 3),
-          axis.text.y = element_text(face = "italic"),
-          strip.text = element_text(face = "plain"),
-          legend.position = "bottom")
-
-plt6c <- auc_aggregation %>% 
-    ggplot(aes(x = strain, y = fractional_change * 100, fill = synID))+
-    facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
-    geom_hline(yintercept = 0, linetype = 2, linewidth = 0.3)+
-    geom_jitter(aes(fill = fct_rev(synID)), 
-                alpha = 0.5, size = 0.5, 
-                position = position_jitterdodge(jitter.width = 0.2, 
-                                                dodge.width = 0.6))+
-    geom_boxplot(aes(fill = fct_rev(synID)),
-                 outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.6)+
-    geom_text(data = w1_strain, aes(label = p.adj.signif, y = y.position + 10, group = fct_rev(synID)),
-              position = position_dodge(width = 0.6), size = 6)+
+    add_pvalue(w2_strain, 
+               xmin = "group1", xmax = "group2", label = "p.adj.signif",
+               tip.length = 0.005, size = 2, lineend = "round", 
+               bracket.size = 0.2, coord.flip = TRUE)+
     coord_flip()+
     scale_x_discrete(name = "", labels = sp.lab)+
     scale_y_continuous(name = "Change in spatial aggregation [%]", 
-                       limits = c(-100, 50))+
+                       limits = c(-100, 40))+
     scale_fill_manual(name = "SynCom", values = syn.pal[2:3], breaks = c("S2", "S3"))+
     theme_rs()+
     theme(axis.text.x = element_text(hjust = 0.5, vjust = 3),
           axis.text.y = element_text(face = "plain"),
-          strip.text = element_text(face = "plain"),
-          legend.position = "bottom")
+          strip.text.x = element_text(face = "plain"),
+          strip.text.y = element_text(face = "plain", angle = 0, vjust = 0.5, hjust = 0))
 
 ### Wrap plots
-wrap_plots(plt6a, plt6b + plt6c, ncol = 1) +
+wrap_plots(plt6a, 
+           wrap_plots(plt6b, plt6c,
+                      ncol = 2,
+                      guides = "collect"), 
+           ncol = 1) +
     plot_annotation(tag_levels = "A") + 
-    plot_layout(heights = c(2,1)) &
+    plot_layout(heights = c(1,1.2)) &
     theme(panel.spacing.x = unit(0.5, "lines"),
+          panel.spacing.y = unit(0.5, "lines"),
           plot.margin = margin(1,2,0,2),
-          plot.tag = element_text(size = 7))
+          plot.tag = element_text(size = 7),
+          legend.position = "bottom")
 
 ### Save plot
-ggsave(here("results", "fig6.pdf"), width = 6, height = 6)
+ggsave(here("results", "fig6.pdf"), width = 6, height = 5)
