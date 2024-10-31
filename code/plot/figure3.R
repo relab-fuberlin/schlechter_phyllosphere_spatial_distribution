@@ -17,8 +17,7 @@ p_value_plt3b <- fold_change_S3 %>%
     group_by(dpi, taxa) %>% 
     dunn_test(log2FC ~ tritagonist, p.adjust.method = "holm") %>% 
     mutate(p.adj.signif = ifelse(p < 0.05, "*", "ns")) %>% 
-    add_xy_position(x = "taxa", 
-                    step.increase = 0.1,
+    add_xy_position(x = "taxa",
                     dodge = 0.8) %>%
     filter(p.adj.signif != "ns")
 
@@ -26,8 +25,7 @@ p_value_plt3c <- fold_change_S3 %>%
     group_by(dpi, taxa_pair) %>% 
     dunn_test(log2FC ~ tritagonist, p.adjust.method = "holm") %>% 
     mutate(p.adj.signif = ifelse(p < 0.05, "*", "ns")) %>% 
-    add_xy_position(x = "taxa_pair", 
-                    step.increase = 0.1,
+    add_x_position(x = "taxa_pair",
                     dodge = 0.8) %>%
     filter(p.adj.signif != "ns")
     
@@ -43,13 +41,10 @@ plt3b <- fold_change_S3 %>%
                                                 dodge.width = 0.8))+
     geom_boxplot(aes(fill = tritagonist),
                  outlier.alpha = 0, alpha = 0.9, size = 0.2, width = 0.8)+
-    add_pvalue(data = p_value_plt3_taxa, 
-               label = "p.adj.signif", xmin = "xmax", xmax = "xmin", 
-               tip.length = 0.02, size = 2,
-               lineend = "round", bracket.size = 0.4, coord.flip = TRUE)+
     add_pvalue(data = p_value_plt3b, 
+               y.position = 0.1, step.increase = 0.02,
                label = "p.adj.signif", xmin = "xmax", xmax = "xmin", 
-               tip.length = 0.005, size = 2,
+               tip.length = 0.005, size = 2, bracket.shorten = -0.01,
                lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
     coord_flip()+
     scale_x_discrete(name = "", labels = taxa.lab)+
@@ -74,9 +69,10 @@ plt3c <- fold_change_S3 %>%
                  outlier.alpha = 0, alpha = 0.9, size = 0.2, 
                  position = position_dodge2(width = 0.75, 
                                             preserve = "single"))+
-    add_pvalue(data = p_value_plt3d, 
+    add_pvalue(data = p_value_plt3c,
+               y.position = 0.1, step.increase = 0.02,
                label = "p.adj.signif", xmin = "xmax", xmax = "xmin", 
-               tip.length = 0.005, size = 2,
+               tip.length = 0.005, size = 2, bracket.shorten = -0.01,
                lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
     coord_flip()+
     scale_x_discrete(name = "", labels = taxa.lab)+
