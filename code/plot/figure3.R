@@ -104,9 +104,9 @@ ggsave(here("results", "fig3.pdf"), width = 4, height = 5)
 
 
 
-### Plot S4 
+### Plot S3 
 ### p-values
-p_value_pltS4a <- fold_change_S3 %>% 
+p_value_pltS3a <- fold_change_S3 %>% 
     group_by(dpi, taxa) %>% 
     wilcox_test(log2FC ~ taxa_tritagonist) %>% 
     mutate(p.adj.signif = ifelse(p < 0.05, "*", "ns")) %>% 
@@ -115,7 +115,7 @@ p_value_pltS4a <- fold_change_S3 %>%
                     dodge = 0.6) %>%
     filter(p.adj.signif != "ns")
 
-p_value_pltS4b <- fold_change_S3 %>% 
+p_value_pltS3b <- fold_change_S3 %>% 
     group_by(dpi) %>% 
     dunn_test(log2FC ~ taxa_pair) %>% 
     mutate(p.adj.signif = ifelse(p < 0.05, "*", "ns")) %>% 
@@ -125,7 +125,7 @@ p_value_pltS4b <- fold_change_S3 %>%
     mutate(y.position = y.position) %>% 
     filter(p.adj.signif != "ns")
 
-p_value_pltS4b2 <- fold_change_S3 %>% 
+p_value_pltS3b2 <- fold_change_S3 %>% 
     filter(taxa_pair != "SS") %>% 
     group_by(dpi, taxa_pair) %>% 
     wilcox_test(log2FC ~ taxa_tritagonist) %>% 
@@ -138,7 +138,7 @@ p_value_pltS4b2 <- fold_change_S3 %>%
 
 #### Supplemental plot
 
-pltS4a <- fold_change_S3 %>% 
+pltS3a <- fold_change_S3 %>% 
     ggplot(aes(x = taxa, y = log2FC))+
     facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
     geom_hline(yintercept = 0, linetype = 2, linewidth = 0.3)+
@@ -152,14 +152,14 @@ pltS4a <- fold_change_S3 %>%
                label = "p.adj.signif", xmin = "xmax", xmax = "xmin", 
                tip.length = 0.02, size = 2,
                lineend = "round", bracket.size = 0.4, coord.flip = TRUE)+
-    add_pvalue(data = p_value_pltS4a, 
+    add_pvalue(data = p_value_pltS3a, 
                label = "p.adj.signif", xmin = "xmax", xmax = "xmin", 
                tip.length = 0.005, size = 2,
                lineend = "round", bracket.size = 0.2, coord.flip = TRUE)+
     coord_flip()+
     scale_x_discrete(name = "", labels = taxa.lab)+
     scale_y_continuous(name = bquote(Log[2]~"FC Bacterial density"), 
-                       limits = c(-13.5, 4))+
+                       limits = c(-13.5, 8))+
     scale_fill_manual(name = "Tritagonist", values = taxa.pal, labels = taxa.lab)+
     theme_rs()+
     theme(axis.text.x = element_text(hjust = 0.5, vjust = 3),
@@ -167,7 +167,7 @@ pltS4a <- fold_change_S3 %>%
           strip.text = element_text(face = "plain"),
           legend.position = "bottom")
 
-pltS4b <- fold_change_S3 %>% 
+pltS3b <- fold_change_S3 %>% 
     ggplot(aes(x = taxa_pair, y = log2FC))+
     facet_grid(cols = vars(dpi), labeller = labeller(dpi = dpi.lab2))+
     geom_hline(yintercept = 0, linetype = 2, linewidth = 0.3)+
@@ -179,14 +179,14 @@ pltS4b <- fold_change_S3 %>%
                  outlier.alpha = 0, alpha = 0.9, size = 0.2, 
                  position = position_dodge2(width = 0.8, 
                                             preserve = "single"))+
-    add_pvalue(data = p_value_pltS4b, 
+    add_pvalue(data = p_value_pltS3b, 
                label = "p.adj.signif", xmin = "xmax", xmax = "xmin", 
                tip.length = 0.005, size = 2,
                lineend = "round", bracket.size = 0.4, coord.flip = TRUE)+
     coord_flip()+
     scale_x_discrete(name = "", labels = taxa.lab)+
     scale_y_continuous(name = bquote(Log[2]~"FC Bacterial density"), 
-                       limits = c(-13.5, 4))+
+                       limits = c(-13.5, 8))+
     scale_fill_manual(name = "Tritagonist", values = taxa.pal, labels = taxa.lab)+
     theme_rs()+
     theme(axis.text.x = element_text(hjust = 0.5, vjust = 3),
@@ -196,7 +196,7 @@ pltS4b <- fold_change_S3 %>%
 
 ###  Wrap plots
 wrap_plots(wrap_elements(panel = rectGrob(gp = gpar(fill = 'white'))),
-           pltS4a, pltS4b, ncol = 1)+
+           pltS3a, pltS3b, ncol = 1)+
     plot_annotation(tag_levels = "A") + 
     plot_layout(guides = "collect",
                 heights = c(1, 1, 1)) &
@@ -209,4 +209,4 @@ wrap_plots(wrap_elements(panel = rectGrob(gp = gpar(fill = 'white'))),
 
 
 ### Save plot
-ggsave(here("results", "figS4.pdf"), width = 4, height = 4)
+ggsave(here("results", "figS3.pdf"), width = 4, height = 4)

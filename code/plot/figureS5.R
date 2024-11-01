@@ -174,7 +174,7 @@ pltS5d <- fold_change_S3 %>%
           strip.text = element_text(face = "plain"),
           legend.position = "bottom")
 
-wrap_plots(pltS5c + pltS5a + pltS5d + pltS5b,
+wrap_plots(pltS5c + pltS5d + pltS5a + pltS5b,
            ncol = 1)+
     plot_annotation(tag_levels = "A") + 
     plot_layout(guides = "collect",
