@@ -40,7 +40,8 @@ set.seed(19900725)
 # Load data
 data_cell <- read.csv(here("results", "cell_density.csv")) %>% 
     inner_join(., read.csv(here('data', 'comm_id.csv'))) %>% 
-    inner_join(., unique(cfu[,c(7,8)]), by = "strain")
+    inner_join(., unique(read.csv(here("results", "data_processed.csv"))[,c(7,8)]), 
+        by = "strain")
 ```
 
 #### Effect of community complexity on intraspecific spatial relations ####
@@ -295,13 +296,23 @@ fold_change_S3 %>%
 Q: Do these changes depend on the third species?
 
 ```{r}
+## Taxa-level tritagonist
 fold_change_S3 %>% 
     group_by(dpi, taxa) %>% 
     wilcox_test(log2FC ~ taxa_tritagonist)
 
+##  Fold changes of strains in S3 compared to S2
 fold_change_S3 %>% 
-    group_by(dpi, taxa) %>% 
-    dunn_test(log2FC ~ tritagonist, p.adjust.method = "holm")
+    group_by(dpi, taxa, taxa_tritagonist) %>% 
+    summarise(median_log2FC = median(log2FC),
+              fold_decrease = 2^abs(median_log2FC))
+
+##  Strain-level tritagonist
+fold_change_S3 %>% 
+    filter(taxa == "Methylobacterium") %>% 
+    group_by(dpi, tritagonist, synID) %>% 
+    summarise(log2FC = median(log2FC)) %>% 
+    filter(tritagonist %in% c("meL85", "meL92", "mr01"))
 
 ```
 

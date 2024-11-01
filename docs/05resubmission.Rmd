@@ -14,18 +14,10 @@ options(digits = 2, scipen = 1, pillar.signif = 3)
 # Libraries
 library(here)
 library(tidyverse)
-library(car)
 library(rstatix)
-library(forcats)
-library(emmeans)
-library(lme4)
-library(multcomp)
-library(vegan)
 library(compositions)
 
 # Plotting 
-library(ggdist)
-library(ggpubr)
 library(ggprism)
 library(patchwork)
 library(grid)
@@ -205,9 +197,21 @@ cbind(p_values, t_statistics)
 
 ```
 
-## Plot S3
 ```{r}
-source(here('code', 'plot', 'figureS3.R'))
+# Summary statistics
+relative_fractions %>% 
+    group_by(strain) %>% 
+    mutate(percentage = 100*relative_fraction) %>% 
+    summarise(median = sprintf("%1.0f", median(percentage)),
+              IQ1 = sprintf("%1.0f", quantile(percentage, probs = 0.25)),
+              IQ3 = sprintf("%1.0f", quantile(percentage, probs = 0.75)),
+              median_IQR = paste0(median,"% [",IQ1,"-",IQ3,"%]"))
+```
+
+
+## Plot S2
+```{r}
+source(here('code', 'plot', 'figureS2.R'))
 ```
 
 ##### TRITAGONISTS #####
@@ -413,7 +417,7 @@ fold_change_S3 %>%
     arrange(-fold_decrease)
 ```
 
-## Plots 3 and S4
+## Plots 3 and S3
 ```{r}
 source(here('code', 'plot', 'figure3.R'))
 ```
