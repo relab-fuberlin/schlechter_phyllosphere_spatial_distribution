@@ -44,5 +44,20 @@ source(here('code', 'plot', 'figure6.R'))
 ### G(R) ESTIMATES
 
 ```{r}
+G_percentage <- G_auc_fractions %>% 
+    group_by(syncom, synID, dpi, taxa_pair, strain_pair) %>% 
+    mutate(percentage = 100*auc/sum(auc))
+
+G_percentage %>% 
+    group_by(synID, dpi, type) %>% 
+    summarise(median = sprintf("%1.0f", median(percentage)),
+              IQ1 = sprintf("%1.0f", quantile(percentage, probs = 0.25)),
+              IQ3 = sprintf("%1.0f", quantile(percentage, probs = 0.75)),
+              median_IQR = paste0(median,"% [IQR: ",IQ1,"-",IQ3,"%]"))
+```
+
+
+```{r}
 source(here('code', 'plot', 'figure7.R'))
+source(here('code', 'plot', 'figureS9.R'))
 ```
