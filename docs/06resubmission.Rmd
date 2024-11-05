@@ -83,6 +83,16 @@ data_cell %>%
 # Effect of taxa
 
 ```{r}
+## Summary
+data_cell %>% 
+    group_by(synID, taxa) %>% 
+    summarise(median = format(median(cell_density), scientific = TRUE),
+              IQ1 = format(quantile(cell_density, probs = 0.25), 
+                           scientific = TRUE),
+              IQ3 = format(quantile(cell_density, probs = 0.75), 
+                           scientific = TRUE),
+              median_IQR = paste0(median," [",IQ1,"-",IQ3,"]"))
+
 ## Statistical tests
 data_cell %>% 
     group_by(dpi, synID) %>% 
