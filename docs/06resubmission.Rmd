@@ -1,0 +1,371 @@
+---
+title: "Resubmission Microscopy data"
+author: "Rudolf Schlechter"
+date: "2024-10-30"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', dpi = 300, cache = TRUE)
+options(digits = 2, scipen = 1, pillar.signif = 3)
+
+# Libraries
+## Data processing
+library(here)
+library(tidyverse)
+
+## Stats
+library(rstatix)
+library(car)
+
+## Data visualisation
+library(ggdist)
+library(ggpubr)
+library(ggprism)
+library(patchwork)
+library(grid)
+
+# Dependencies
+source(here('code', 'palette_syncom.R'))
+source(here('code', 'theme_rs_spatial.R'))
+source(here('code', 'function_triad.R'))
+
+# Set seed
+set.seed(19900725)
+```
+
+```{r}
+# Load data
+data_cell <- read.csv(here("results", "cell_density.csv")) %>% 
+    inner_join(., read.csv(here('data', 'comm_id.csv'))) %>% 
+    inner_join(., unique(read.csv(here("results", "data_processed.csv"))[,c(7,8)]), 
+        by = "strain")
+```
+
+#### Effect of community complexity on intraspecific spatial relations ####
+
+# Effect of SynCom type
+
+Influence of community complexity on individual bacterial populations at the CFU level:
+
+```{r}
+## Statistical tests
+data_cell %>% 
+    kruskal_test(logCell ~ synID)
+
+data_cell %>% 
+    group_by(dpi) %>% 
+    kruskal_test(logCell ~ synID)
+
+data_cell %>% 
+    dunn_test(logCell ~ synID, p.adjust.method = "holm")
+
+## Fold change
+fold_change(data_cell,
+            value = "cell_density",
+            ref_variable = "synID",
+            ref_group = "C") %>% 
+    mutate(invFC = 1/FC)
+```
+
+This effect was reflected by a significant two-fold increase in S2 and five-fold decrease in S3
+
+# Effect of sampling time
+
+```{r}
+## Statistical tests
+data_cell %>% 
+    wilcox_test(logCell ~ dpi)
+```
+
+# Effect of taxa
+
+```{r}
+## Summary
+data_cell %>% 
+    group_by(synID, taxa) %>% 
+    summarise(median = format(median(cell_density), scientific = TRUE),
+              IQ1 = format(quantile(cell_density, probs = 0.25), 
+                           scientific = TRUE),
+              IQ3 = format(quantile(cell_density, probs = 0.75), 
+                           scientific = TRUE),
+              median_IQR = paste0(median," [",IQ1,"-",IQ3,"]"))
+
+## Statistical tests
+data_cell %>% 
+    group_by(dpi, synID) %>% 
+    wilcox_test(logCell ~ taxa)
+
+## Fold change
+fold_change(data_cell,
+            value = "cell_density",
+            ref_variable = "synID",
+            ref_group = "C",
+            group_by_variable = c("dpi", "taxa")) %>% 
+    mutate(invFC = 1/FC)
+
+#   Data frame for plotting
+fc_cell_taxa <- fold_change(data_cell,
+            value = "cell_density",
+            ref_variable = "synID",
+            ref_group = "C",
+            group_by_variable = c("dpi", "strain", "taxa"),
+            additional_variable = c("exp", "rep"))
+
+```
+
+# Effect of strain
+```{r}
+## Statistical tests
+data_cell %>% 
+    group_by(dpi, strain) %>% 
+    kruskal_test(logCell ~ synID)
+
+data_cell %>% 
+    group_by(dpi, strain) %>% 
+    dunn_test(logCell ~ synID, p.adjust.method = "holm") %>% 
+    print(n = 30)
+
+fold_change(data_cell,
+            value = "cell_density",
+            ref_variable = "synID",
+            ref_group = "C",
+            group_by_variable = c("dpi", "strain")) %>% 
+    mutate(invFC = 1/FC) %>% 
+    arrange(log2FC)
+
+## Fold change
+fc_cell_strain <- fold_change(data_cell,
+            value = "cell_density",
+            ref_variable = "synID",
+            ref_group = "C",
+            group_by_variable = c("dpi", "strain"),
+            additional_variable = c("exp", "rep"))
+
+```
+
+## Plot 5
+```{r}
+source(here('code', 'plot', 'figure5.R'))
+```
+
+##### TRITAGONISTS #####
+
+First, we create a data set in which we can compare the species pairs and the tritagonist
+
+```{r}
+# Split the data
+split_data <- data_cell %>% 
+    dplyr::select(synID, syncom, strain, taxa) %>% 
+    unique() %>% 
+    split(., 
+          list(.$synID,
+               .$syncom),
+          drop = TRUE,
+          sep = "_")
+
+# Apply the function to each group
+# The pair_combinations function will create a data frame
+# with the strain pairs and tritagonists
+result_list <- lapply(split_data, pair_combinations)
+
+# Combine the results into a single dataframe
+final_result <- do.call(rbind, result_list)
+
+# Clean data to create a complete data frame with pairs of taxa and 
+# tritagonists
+strain_pairs <- final_result %>% 
+    rownames_to_column(var = "label") %>% 
+    separate(label, 
+             into = c("synID", "syncom"), 
+             sep = "_")  %>% 
+    separate(syncom, into = c("syncom", "part1"), sep = "\\.") %>% 
+    unite(syncom:part1, 
+          col = "syncom",
+          sep = ".") %>% 
+    unite(strain1:strain2, 
+          col = "pair", 
+          remove = FALSE) %>% 
+    mutate(taxa_pair = case_when(
+            pair == "meL85_meL92" | 
+                pair == "meL85_meL92" | 
+                pair == "meL85_mr01" | 
+                pair == "meL92_mr01" ~ "MM",
+            pair == "meL85_smfr1" | 
+                pair == "meL85_spfa2" | 
+                pair == "meL92_smfr1" | 
+                pair == "meL92_spfa2" | 
+                pair == "mr01_smfr1" | 
+                pair == "mr01_spfa2" ~ "MS",
+            pair == "smfr1_spfa2" ~ "SS"),
+        taxa_tritagonist = case_when(
+            tritagonist == "smfr1" | 
+                tritagonist == "spfa2" ~ "Sphingomonas",
+            tritagonist == "meL85" | 
+                tritagonist == "meL92" | 
+                tritagonist == "mr01" ~ "Methylobacterium")) %>% 
+    mutate(taxa_tritagonist = factor(taxa_tritagonist),
+           taxa_pair = factor(taxa_pair)) %>% 
+    filter(synID != "C")
+
+## Long version
+strain_pairs_long <- strain_pairs %>% 
+    pivot_longer(cols = strain1:strain2, 
+                 names_to = "type_strain", 
+                 values_to = "strain") %>% 
+    dplyr::select(-type_strain)
+
+```
+
+```{r}
+# Create a data frame from the microscopy data with tritagonists, pairs of
+# species and their identities. This way, we compare the cell numbers of individual
+# strains that belong to a pair and calculate the fold change in relation
+# to the pair in S2
+data_cell_full <- data_cell %>% 
+    filter(synID != "C") %>% 
+    inner_join(., strain_pairs_long, 
+               by = join_by(synID, syncom, strain),
+               relationship = "many-to-many")
+
+# Define de variables to group the data frame for fold change calculation
+variables <- c("dpi", "pair", "strain", "taxa_pair")
+
+## Fold change
+strain_pairs_simple <- strain_pairs_long %>% 
+    filter(synID == "S3")
+
+reference_S2 <- data_cell_full %>% 
+    filter(synID == "S2") %>% 
+    group_by(dpi, strain, taxa, pair, taxa_pair) %>% 
+    summarise(reference_value = median(cell_density))
+
+fold_change_S3 <- data_cell_full %>% 
+    filter(synID == "S3") %>% 
+    dplyr::select(exp, rep, dpi, 
+                  synID, syncom, strain, 
+                  taxa, cell_density, pair, tritagonist, 
+                  taxa_pair, taxa_tritagonist) %>% 
+    inner_join(., reference_S2) %>% 
+    mutate(FC = cell_density/reference_value,
+           log2FC = log2(FC))
+
+```
+
+Q: Is the fold change of Sphingomonas and Methylobacterium within a pair different in S3?
+
+```{r}
+##  One-sample Wilcoxon
+##  Evaluate if FC of a strain in S3 is different to S2
+fold_change_S3 %>% 
+    group_by(dpi, taxa) %>% 
+    wilcox_test(log2FC ~ 1, mu = 0) # All different except for Sphingomonas at 14 dpi are not different to S2
+
+##  Wilcoxon test
+##  Evaluate differences between Sphingomonas and Methylobacterium
+fold_change_S3 %>% 
+    group_by(dpi) %>% 
+    wilcox_test(log2FC ~ taxa) # Taxa are different in both time points
+
+##  Fold changes of each taxa in S3 compared to S2
+fold_change_S3 %>% 
+    group_by(dpi, taxa) %>% 
+    summarise(median_log2FC = median(log2FC),
+              fold_decrease = 2^abs(median_log2FC))
+```
+
+Q: Is the fold change of individual strains within a pair different in S3?
+
+```{r}
+##  One-sample Wilcoxon
+##  Evaluate if FC of a strain in S3 is different to S2
+fold_change_S3 %>% 
+    group_by(dpi, strain) %>% 
+    wilcox_test(log2FC ~ 1, mu = 0)
+
+##  Kruskal-Wallis test
+##  Evaluate differences between strains
+fold_change_S3 %>% 
+    group_by(dpi) %>% 
+    kruskal_test(log2FC ~ strain)
+
+##  Post-hoc test
+fold_change_S3 %>% 
+    group_by(dpi) %>% 
+    dunn_test(log2FC ~ strain, p.adjust.method = "holm")
+
+##  Fold changes of strains in S3 compared to S2
+fold_change_S3 %>% 
+    group_by(dpi, strain) %>% 
+    summarise(median_log2FC = median(log2FC),
+              fold_decrease = 2^abs(median_log2FC))
+```
+
+Q: Do these changes depend on the third species?
+
+```{r}
+## Taxa-level tritagonist
+fold_change_S3 %>% 
+    group_by(dpi, taxa) %>% 
+    wilcox_test(log2FC ~ taxa_tritagonist)
+
+##  Fold changes of strains in S3 compared to S2
+fold_change_S3 %>% 
+    group_by(dpi, taxa, taxa_tritagonist) %>% 
+    summarise(median_log2FC = median(log2FC),
+              fold_decrease = 2^abs(median_log2FC))
+
+##  Strain-level tritagonist
+fold_change_S3 %>% 
+    filter(taxa == "Methylobacterium") %>% 
+    group_by(dpi, tritagonist, synID) %>% 
+    summarise(log2FC = median(log2FC)) %>% 
+    filter(tritagonist %in% c("meL85", "meL92", "mr01"))
+
+```
+
+Q: Are taxa pairs different?
+
+```{r}
+fold_change_S3 %>% 
+    group_by(dpi) %>% 
+    kruskal_test(log2FC ~ taxa_pair)
+
+fold_change_S3 %>% 
+    group_by(dpi) %>% 
+    dunn_test(log2FC ~ taxa_pair, p.adjust.method = "holm")
+
+##  Fold changes of strains in S3 compared to S2
+fold_change_S3 %>% 
+    group_by(dpi, taxa_pair) %>% 
+    summarise(median_log2FC = median(log2FC),
+              fold_decrease = 2^abs(median_log2FC))
+```
+
+Q: Do these differences depend on the tritagonist?
+
+```{r}
+fold_change_S3 %>% 
+    group_by(dpi, taxa_pair) %>% 
+    kruskal_test(log2FC ~ tritagonist)
+
+fold_change_S3 %>% 
+    group_by(dpi, taxa_pair) %>% 
+    dunn_test(log2FC ~ tritagonist, p.adjust.method = "holm") %>% 
+    filter(p.adj < 0.05)
+
+##  Fold changes of strains in S3 compared to S2
+fold_change_S3 %>% 
+    group_by(dpi, taxa_pair, tritagonist) %>% 
+    summarise(median_log2FC = median(log2FC),
+              fold_decrease = 2^abs(median_log2FC)) %>% 
+    arrange(-fold_decrease)
+```
+
+## Plot S5
+## Effect of tritagonists on fold change population cell density (microscopy data)
+```{r}
+source(here('code', 'plot', 'figureS5.R'))
+```
