@@ -1,0 +1,63 @@
+---
+title: "Resubmission - Spatial data"
+author: "Rudolf Schlechter"
+date: "2024-10-30"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align = 'center', dpi = 300, cache = TRUE)
+options(digits = 2, scipen = 1, pillar.signif = 3)
+
+library(here)
+library(tidyverse)
+library(rstatix)
+library(ggh4x)
+library(ggprism)
+
+source(here('code', 'palette_syncom.R'))
+source(here('code', 'theme_rs_spatial.R'))
+
+# Data
+# K-estimates
+source(here('code', 'spat_K_fractions_auc.R'))
+source(here('code', 'function_fractional_change_median.R'))
+K_auc_aggregation <- K_auc_fold_change %>% filter(type == "aggregate_fraction")
+
+# G-estimates
+source(here('code', 'spat_pcf_fractions_auc.R'))
+source(here('code', 'function_fractional_change_median.R'))
+G_auc_aggregation <- G_auc_fold_change %>% filter(type == "aggregate_fraction")
+
+set.seed(19900725)
+```
+
+## RESUBMISSION
+### K(R) ESTIMATES
+
+```{r}
+source(here('code', 'plot', 'figure6.R'))
+```
+
+### G(R) ESTIMATES
+
+```{r}
+G_percentage <- G_auc_fractions %>% 
+    group_by(syncom, synID, dpi, taxa_pair, strain_pair) %>% 
+    mutate(percentage = 100*auc/sum(auc))
+
+G_percentage %>% 
+    group_by(synID, dpi, type) %>% 
+    summarise(median = sprintf("%1.0f", median(percentage)),
+              IQ1 = sprintf("%1.0f", quantile(percentage, probs = 0.25)),
+              IQ3 = sprintf("%1.0f", quantile(percentage, probs = 0.75)),
+              median_IQR = paste0(median,"% [IQR: ",IQ1,"-",IQ3,"%]"))
+```
+
+
+```{r}
+source(here('code', 'plot', 'figure7.R'))
+source(here('code', 'plot', 'figureS9.R'))
+```
