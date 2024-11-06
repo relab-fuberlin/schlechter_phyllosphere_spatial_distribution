@@ -205,7 +205,7 @@ relative_fractions %>%
     summarise(median = sprintf("%1.0f", median(percentage)),
               IQ1 = sprintf("%1.0f", quantile(percentage, probs = 0.25)),
               IQ3 = sprintf("%1.0f", quantile(percentage, probs = 0.75)),
-              median_IQR = paste0(median,"% [",IQ1,"-",IQ3,"%]"))
+              median_IQR = paste0(median,"% [IQR: ",IQ1,"-",IQ3,"%]"))
 ```
 
 
