@@ -1,7 +1,6 @@
-# Bacterial community complexity in the phyllosphere penalises specialists over generalists
+# Differential responses of _Methylobacterium_ and _Sphingomonas_ species to multispecies interactions in the phyllosphere
 Spatial distribution analysis of synthetic bacterial communities (SynCom) on the _Arabidopsis thaliana_ leaf surface.
-This repository contains the scripts used to analyse the data published in: xxxxxx 
-Raw data is storaged in [Zenodo](https://zenodo.org/doi/10.5281/zenodo.100361160):
+This repository contains the scripts used to analyse the data published in Environmental Microbiology (accepted). Raw data is available in [Zenodo](https://zenodo.org/doi/10.5281/zenodo.100361160):
 File | Data type | Content
 :---: | :---: | :---:
 `cfu.csv` | CSV table | CFU data of each bacterial population in arabidopsis
@@ -10,6 +9,7 @@ File | Data type | Content
 `coordinates_S3.csv` | CSV table | Coordinates of cells within S3
 `metadata.csv` | CSV table | Data of each community including biological replicates and images taken
 `bacimg.tar.gz` | Images | Images taken for cell populations in C, S2 and S3
+`Supplemental Material.pdf` | PDF | Supplemental Material
 ## Setting up 
 First, you need to clone this repository
 ```
